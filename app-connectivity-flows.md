@@ -1,7 +1,7 @@
-# An App's Life Across CMS-Aligned Networks — Without a Home Network
+# An App's Life Across CMS-Aligned Networks, Without a Home Network
 
 **Flow walkthrough with sequence diagrams**
-*Companion to [apps-without-home-networks.md](apps-without-home-networks.md). Shows that a patient-facing app, carrying only its CMS App Library credentials, can register with networks that work in three different ways, locate records, and retrieve data — with no home network and no manual per-data-holder steps.*
+*Companion to [apps-without-home-networks.md](apps-without-home-networks.md). Shows that a patient-facing app, carrying only its CMS App Library credentials, can register with networks that work in three different ways, locate records, and retrieve data, with no home network and no manual per-data-holder steps.*
 
 > **Conventions**
 >
@@ -26,15 +26,15 @@
 | **Gamma Trust Network** | A **UDAP trust community**: one-time per-network credentialing with Gamma's recognized CA, then UDAP dynamic registration at each data holder. |
 | **Maria** | A patient, IAL2-verified through a CMS-approved credential service provider (CSP). |
 
-Three networks, three registration styles. The invariant being demonstrated:
+The three networks use three different registration styles, and the walkthrough demonstrates one invariant:
 
 > **Per-network custom work is acceptable. Per-data-holder manual work is not.**
 
 ---
 
-## Phase 0 — One-time setup: the app's only "onboarding," anywhere
+## Phase 0 — One-time setup at the CMS App Library
 
-BP Buddy's developer goes through CMS App Library admission once: identity verification, FHIR R4 / SMART on FHIR conformance against the open reference test kit, certification by a recognized vetting body, and a `jwks_uri` control check. From then on, CMS re-issues a short-lived signed software statement for as long as the app is in good standing — `library_status: active`.
+BP Buddy's developer goes through CMS App Library admission once: identity verification, FHIR R4 / SMART on FHIR conformance against the open reference test kit, certification by a recognized vetting body, and a `jwks_uri` control check. From then on, CMS re-issues a short-lived signed software statement for as long as the app is in good standing (`library_status: active`).
 
 ```mermaid
 sequenceDiagram
@@ -72,13 +72,13 @@ sequenceDiagram
     NPD-->>App: Alpha (centralized reg, broker endpoint)<br/>Beta (per-data-holder dynreg, RLS endpoint, data-holder endpoints)<br/>Gamma (UDAP community, CA anchor, RLS endpoint, data-holder endpoints)
 ```
 
-NPD tells the app (or the open-source library it uses) which door each network offers. The per-network variation is mechanical metadata, not relationship-building.
+NPD tells the app (or the client library it uses) how each network handles registration, as machine-readable metadata.
 
 ---
 
 ## Phase 2 — Registering with each network
 
-Any of the three may put a human in the loop at the network level. Alpha's portal makes it visible. But Beta's and Gamma's data holders may equally look for a signal from their own network that an app is okay to let in — and the network behind that signal may have run a manual review. All of it is conformant, because whatever manual steps exist attach to the **network**, once; the app's interaction with each **data holder** stays automatic.
+Any of the three networks may put a human in the loop at the network level. Alpha's portal makes this visible, but Beta's and Gamma's data holders may equally look for a signal from their own network that an app is okay to let in, and the network behind that signal may have run a manual review. All of this is conformant, because whatever manual steps exist attach to the **network**, once; the app's interaction with each **data holder** stays automatic.
 
 ### 2a. Alpha — centralized registration via a developer portal (one client ID for the whole network)
 
@@ -101,9 +101,9 @@ sequenceDiagram
     AAS-->>Dev: client_id (valid for all Alpha data holders)
 ```
 
-Manual steps, and that is fine: they happen once, per network, and the invariant only forbids manual work per data holder. The CMS statement still does its job here — the portal pre-fills its form from a signed artifact and verifies one signature instead of re-vetting the app. What the ad-hoc verification looks like is Alpha's business; this walkthrough deliberately doesn't specify it, and neither should the spec.
+These manual steps are acceptable because they happen once per network; the invariant only forbids manual work per data holder. The CMS statement still does its job: the portal pre-fills its form from a signed artifact and verifies one signature instead of re-vetting the app. The details of the ad-hoc verification are Alpha's business; this walkthrough deliberately leaves them unspecified, and the spec should too.
 
-One registration covers every data holder on Alpha — the network absorbed the edge complexity as part of its product.
+One registration covers every data holder on Alpha; the network absorbs the edge complexity as part of its product.
 
 ### 2b. Beta — dynamic registration at each data holder, CMS statement as the trust signal
 
@@ -116,17 +116,18 @@ sequenceDiagram
     participant DH1 as Beta data holder 1<br/>auth server
     participant DHn as Beta data holder N<br/>auth server
 
-    Note over App,Beta: One-time per-network step — may be manual
-    App->>Beta: Request onboarding<br/>(link to CMS software statement)
-    Beta->>CMS: Fetch and verify the statement
-    Beta->>Beta: Network-level review<br/>per Beta policy (possibly manual)
-    Beta-->>DH1: Approval signal: app okayed
-    Beta-->>DHn: Approval signal: app okayed
+    opt network-level onboarding, per Beta policy (may be manual, may be skipped)
+        App->>Beta: Request onboarding<br/>(link to CMS software statement)
+        Beta->>CMS: Fetch and verify the statement
+        Beta->>Beta: Review per Beta policy<br/>(possibly manual)
+        Beta-->>DH1: Approval signal: app okayed
+        Beta-->>DHn: Approval signal: app okayed
+    end
     App->>CMS: GET software-statement.jwt<br/>(fresh, ≤24h old)
     CMS-->>App: software_statement
     par automated, per data holder
         App->>DH1: POST /register (RFC 7591, software_statement)
-        DH1->>DH1: Verify CMS signature, library_status,<br/>key possession, Beta approval signal
+        DH1->>DH1: Verify CMS signature, library_status, key<br/>possession, Beta approval signal (if any)
         DH1-->>App: client_id @ data holder 1
     and
         App->>DHn: POST /register (RFC 7591, software_statement)
@@ -134,7 +135,7 @@ sequenceDiagram
     end
 ```
 
-More registrations than Alpha — but every one is a machine-to-machine call a library performs in a loop. Per-data-holder *work*, zero per-data-holder *manual steps*. The network is not absent: Beta runs its own onboarding before its data holders start saying yes to an app, and that review can be as manual as Beta likes. Its data holders then consult Beta's approval signal automatically, under the hood. The app experiences the review once per network, not once per endpoint.
+Each registration is a machine-to-machine call that a client library performs in a loop, so the larger count compared to Alpha costs nothing manual. The optional block is where Beta's own judgment lives: it may onboard apps before its data holders accept them, with as much manual review as its policy requires, or it may skip that layer and let the CMS statement carry the decision. Either way, its data holders act on the signal automatically, and the app sees at most one review per network.
 
 ### 2c. Gamma — UDAP trust community
 
@@ -159,17 +160,17 @@ sequenceDiagram
     end
 ```
 
-Gamma chose a CA-anchored trust path. The app does one custom per-network step (getting the cert), then the per-data-holder layer is automated again. Acceptable under the invariant — and Gamma competes on whether that extra step is worth what its network offers.
+Gamma chose a CA-anchored trust path. The app does one custom per-network step (obtaining the certificate), and the per-data-holder layer is automated from there. This satisfies the invariant, and Gamma competes on whether the extra step is worth what its network offers.
 
-Of the three, Gamma looks closest to needing no network-level step beyond certificate issuance. That is not a promise. The hard problems here are policy, not protocol — who may join the trust community, on what terms, what the community does when an app misbehaves — and a CA-anchored handshake does not settle them. Certificate issuance *is* Gamma's network-level review, manual where its policy says so, and Gamma's data holders, like Beta's, may still consult a network-level signal before honoring a registration.
+Gamma comes closest to working without a separate network-level review, but it would be a mistake to expect UDAP to resolve the underlying policy questions: who may join the trust community, on what terms, and what happens when an app misbehaves. Certificate issuance is itself Gamma's network-level review and can be as manual as its policy requires, and Gamma's data holders may still consult a network-level approval signal before honoring a registration, just as Beta's do.
 
-> Three doors, one artifact: a portal pre-fills its manual form from the statement (Alpha), an RFC 7591 endpoint accepts it directly (Beta), a trust community issues against the same evidence (Gamma). The receiving side routes signature validation by issuer — CMS JWKS for CMS statements, community CA chain for UDAP — exactly as can-spec §7.1 describes. Nowhere did any network ask "who is your home network?", because nobody needed one to decide whether to trust the app.
+All three styles consume the same CMS-signed artifact: Alpha's portal pre-fills its form from it, Beta's data holders accept it at an RFC 7591 endpoint, and Gamma's trust community can rely on the same evidence when issuing certificates. The receiving side routes signature validation by issuer (CMS JWKS for CMS statements, the community CA chain for UDAP), as can-spec §7.1 describes. No network ever needed to ask which home network the app belongs to; the federal credential answered the trust question.
 
 ---
 
 ## Phase 3 — Record location: where does Maria have data?
 
-Maria connects BP Buddy to "find my records." She verifies her identity once via an IAL2 CSP. In line with CMS HTE requirements, **every token request that leads to RLS or data queries carries IAL2 identity evidence** — so the access token the app receives is *bound to Maria*. The app can then call `$rls` only for the patient who authenticated; there is no token that locates anyone else's records. (Patient matching is the CMS-approved rule, can-spec §6; the `$rls` shape is a placeholder, Appendix A1.)
+Maria connects BP Buddy to "find my records." She verifies her identity once via an IAL2 CSP. In line with CMS HTE requirements, **every token request that leads to RLS or data queries carries IAL2 identity evidence**, so the access token the app receives is bound to Maria and can only be used to locate her records. (Patient matching is the CMS-approved rule, can-spec §6; the `$rls` shape is a placeholder, Appendix A1.)
 
 The pattern, identical at each network:
 
@@ -193,7 +194,7 @@ sequenceDiagram
     RLS-->>App: endpoints likely to hold Maria's records
 ```
 
-Run identically against all three networks — the only variation is which client credential each network recognized at registration:
+The app repeats this flow at Alpha, Beta, and Gamma. The only difference between them is which client credential the network recognized at registration:
 
 | Network | `$rls` result for Maria |
 |---|---|
@@ -203,13 +204,13 @@ Run identically against all three networks — the only variation is which clien
 
 Purpose of use (`PATRQT`) is declared at the token request and travels with every downstream call (can-spec §10.3).
 
-**Why an operation rather than a payload?** The maximal-placeholder alternative is to skip `$rls` entirely and return the record-location results *inside the token response* itself. That works, but a real operation earns its place: the app can pass parameters — geographic distribution, recency or date-range hints, resource-type interests — and can re-query under the same patient-bound token as its needs evolve, without another round of identity ceremony.
+**Why an operation rather than a payload?** A simpler placeholder would skip `$rls` entirely and return the record-location results inside the token response itself. That works, but an operation lets the app pass parameters (geographic distribution, recency or date-range hints, resource-type interests) and re-query under the same patient-bound token as its needs change, without repeating the identity flow.
 
 ---
 
 ## Phase 4 — Retrieving data
 
-What happens next depends on the network's shape — and only on that.
+What happens next depends only on the network's shape.
 
 ### 4a. Via Alpha (brokered): the network is the FHIR endpoint
 
@@ -248,15 +249,15 @@ sequenceDiagram
     LFHIR-->>App: FHIR Bundles (USCDI v3 scope per granted scopes)
 ```
 
-The Gamma flow is byte-identical from here — the UDAP-vs-CMS-statement difference was consumed entirely at registration time. **Runtime never changes: `private_key_jwt`, a `kid`, an IAL2 id_token, a patient-bound access token.**
+The Gamma flow is identical from here; the UDAP-vs-CMS-statement difference was consumed at registration time. Runtime is the same everywhere: `private_key_jwt`, a `kid`, an IAL2 id_token, a patient-bound access token.
 
 ---
 
-## Phase 5 — Pressure test: key rotation
+## Phase 5 — Key rotation
 
-The app's authoritative key material lives at its CMS-verified `jwks_uri`, and the app rotates keys there on its own schedule, with no CMS involvement. How each trust path absorbs rotation determines whether rotation stays automatic or becomes a manual per-network ceremony.
+The app's authoritative key material lives at its CMS-verified `jwks_uri`, and the app rotates keys there on its own schedule, with no CMS involvement. Each trust path has to absorb rotation without reintroducing manual per-network steps.
 
-**CMS-statement paths (Alpha, Beta): rotation is free.** The statement binds the *URI*, not a key. Data holders resolve the app's current keys at token time via `kid` lookup against the live JWKS. The app publishes the new key alongside the old (standard overlap window), starts signing with the new `kid`, retires the old. Nothing to re-issue, nobody to notify.
+**CMS-statement paths (Alpha, Beta): rotation is free**, because the statement binds the URI rather than any particular key. Data holders resolve the app's current keys at token time via `kid` lookup against the live JWKS. The app publishes the new key alongside the old for a standard overlap window, starts signing with the new `kid`, and retires the old one. There is nothing to re-issue and nobody to notify.
 
 ```mermaid
 sequenceDiagram
@@ -267,14 +268,14 @@ sequenceDiagram
     participant DH as Any data holder auth server
 
     App->>JWKS: Publish key B alongside key A (overlap window)
-    CMS->>JWKS: Routine monitoring — URI still serving valid JWKS
+    CMS->>JWKS: Routine monitoring (URI still serves a valid JWKS)
     App->>DH: Token request signed with kid=B
     DH->>JWKS: Resolve kid=B at the live jwks_uri
-    DH-->>App: access_token — rotation invisible to the trust layer
+    DH-->>App: access_token (rotation invisible to the trust layer)
     App->>JWKS: Retire key A after overlap window
 ```
 
-**Network-issued certificate paths (Gamma): rotation must be specified, or it breaks the invariant.** A UDAP X.509 certificate binds a *specific key*. The moment the app rotates, every cert a network CA has issued is a detaching copy of the app's identity. If re-syncing means "email the CA," rotation has become a manual per-network step — the exact failure mode this architecture exists to eliminate.
+**Network-issued certificate paths (Gamma) need a rule here**, because an X.509 certificate binds a specific key. Once the app rotates, every certificate a network CA has issued is out of date, and if re-syncing means emailing the CA, rotation has become a manual per-network step.
 
 The requirement to write down:
 
@@ -282,7 +283,7 @@ The requirement to write down:
 
 Three conformant mechanisms (any may be offered; at least one MUST be):
 
-1. **Short-lived certs minted on demand.** The CA issues certificates with TTLs comparable to the CMS statement (hours–days), minted against the current contents of the app's `jwks_uri`. Rotation is absorbed at the next mint. This is the cleanest — it makes the cert a *projection* of the JWKS rather than a competing source of truth.
+1. **Short-lived certs minted on demand.** The CA issues certificates with TTLs comparable to the CMS statement (hours–days), minted against the current contents of the app's `jwks_uri`. Rotation is absorbed at the next mint. This is the cleanest option: the certificate becomes a projection of the JWKS rather than a competing source of truth.
 2. **CA-side monitoring with automatic re-issuance.** The CA watches the app's `jwks_uri` (which CMS verified the app controls, and monitors) and re-issues automatically when keys change.
 3. **App-triggered re-issuance over an authenticated channel.** During the overlap window, the app calls the CA's re-issuance endpoint, authenticating with a JWT signed by a not-yet-retired key; the CA issues a cert for the new key and revokes/expires the old.
 
@@ -305,32 +306,32 @@ sequenceDiagram
     else 3. app-triggered re-issuance
         App->>CA: Re-issue request, signed with key A (still valid)
         CA->>JWKS: Confirm key B is published
-        CA-->>App: Cert for key B — key-A cert expired/revoked
+        CA-->>App: Cert for key B (key-A cert expired/revoked)
     end
     App->>DH: UDAP token request with key-B cert
-    DH-->>App: access_token — no manual steps anywhere
+    DH-->>App: access_token (no manual steps anywhere)
 ```
 
-The general principle: **the `jwks_uri` is the single source of truth for the app's keys, and every other credential format is a derived, auto-refreshing view of it.** A network is free to issue certs at registration time in whatever flavor its community prefers — that's per-network variation the architecture tolerates — so long as those certs track the JWKS automatically for the life of the registration.
+The general principle: **the `jwks_uri` is the single source of truth for the app's keys, and every other credential format is a derived, auto-refreshing view of it.** A network is free to issue certificates at registration time in whatever flavor its community prefers, so long as those certificates track the JWKS automatically for the life of the registration.
 
 ---
 
-## The scorecard
+## Summary
 
 | | Alpha (centralized) | Beta (CMS-statement dynreg) | Gamma (UDAP) |
 |---|---|---|---|
-| Per-network step (may be manual) | portal signup: paste statement link, ad-hoc check | network-level approval possible, invisible to the app | community cert issuance per Gamma policy |
+| Per-network step (may be manual) | portal signup: paste statement link, ad-hoc check | optional network-level approval, invisible to the app | community cert issuance per Gamma policy |
 | Per-data-holder registrations | 0 (network handles) | N, all automated | N, all automated |
 | Per-data-holder **manual** steps | **0** | **0** | **0** |
 | Trust signal verified | CMS statement | CMS statement | X.509 chain → NPD anchor |
 | Runtime auth | private_key_jwt + IAL2 id_token | same | same |
 
-And the things BP Buddy never did, anywhere in this story:
+Throughout the walkthrough, BP Buddy never:
 
-- never designated a home network, or asked any network to vouch for it;
-- never emailed a JWKS URL, and never touched a portal *per data holder* — Alpha's portal was one signup for its whole network;
-- never paid a per-network access fee;
-- never coordinated a key rotation by hand — every credential tracked its `jwks_uri` automatically;
-- never repeated its vetting — the CMS Library review happened once and traveled as a signed artifact.
+- designated a home network or asked any network to vouch for it;
+- emailed a JWKS URL or touched a portal per data holder (Alpha's portal was one signup for the whole network);
+- paid a per-network access fee;
+- coordinated a key rotation by hand (every credential tracked its `jwks_uri` automatically);
+- repeated its vetting (the CMS Library review happened once and traveled as a signed artifact).
 
-A developer who doesn't want to do even *this* much can hand Phases 1–4 to a platform, an open-source library, or skip connectivity entirely and receive Maria's data by her choice to share from an app that does connect. That's delegation as a market offering.
+A developer who doesn't want to do even this much can hand Phases 1–4 to a platform or an open-source library, or can skip connectivity entirely and receive Maria's data when she chooses to share it from an app that does connect.
