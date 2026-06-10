@@ -10,6 +10,7 @@
 >   - *Output:* a list of data-holder endpoints likely to hold records.
 >   - The real wire profile is an open question (can-spec Appendix A1); nothing here depends on its exact shape.
 > - **Registration** uses [RFC 7591 Dynamic Client Registration](https://www.rfc-editor.org/rfc/rfc7591) as the shared wire format wherever dynamic registration appears; the *software statement* presented varies by trust path.
+> - **Identity**, per CMS HTE requirements: every token request that leads to RLS or data queries carries IAL2 identity evidence, and the resulting access token is bound to that verified patient.
 
 ---
 
@@ -151,7 +152,9 @@ Gamma chose a CA-anchored trust path. The app does one custom per-network step (
 
 ## Phase 3 — Record location: where does Maria have data?
 
-Maria connects BP Buddy to "find my records." She verifies her identity once via an IAL2 CSP; the app then asks each network's RLS, carrying her identity context. (Patient matching is the CMS-approved rule, can-spec §6; the `$rls` shape is a placeholder, Appendix A1.)
+Maria connects BP Buddy to "find my records." She verifies her identity once via an IAL2 CSP. In line with CMS HTE requirements, **every token request that leads to RLS or data queries carries IAL2 identity evidence** — so the access token the app receives is *bound to Maria*. The app can then call `$rls` only for the patient who authenticated; there is no token that locates anyone else's records. (Patient matching is the CMS-approved rule, can-spec §6; the `$rls` shape is a placeholder, Appendix A1.)
+
+The pattern, identical at each network:
 
 ```mermaid
 sequenceDiagram
@@ -159,27 +162,31 @@ sequenceDiagram
     actor Maria
     participant App as BP Buddy
     participant CSP as IAL2 CSP<br/>(CLEAR / ID.me)
-    participant A as Alpha RLS
-    participant B as Beta RLS
-    participant G as Gamma RLS
+    participant NAS as Network auth server
+    participant RLS as Network RLS
 
     Maria->>App: "Find my records"
     App->>CSP: IAL2 authentication (standalone launch)
     CSP-->>App: id_token (Maria, IAL2, fresh auth_time)
-    par across networks
-        App->>A: POST Patient/$rls (id_token, purpose: PATRQT)
-        A-->>App: endpoints: [General Hospital]
-    and
-        App->>B: POST Patient/$rls (id_token, purpose: PATRQT)
-        B-->>App: endpoints: [Lakeside Clinic, County Health]
-    and
-        App->>G: POST Patient/$rls (id_token, purpose: PATRQT)
-        G-->>App: endpoints: [Riverbend Medical]
-    end
-    App-->>Maria: Found records at 4 organizations
+    App->>NAS: Token request: private_key_jwt + IAL2 id_token<br/>purpose: PATRQT
+    NAS->>NAS: Verify client credential and id_token<br/>(aud↔app binding, auth_time ≤ 300s, jti replay — can-spec §9)
+    NAS-->>App: access_token bound to Maria, RLS scope
+    App->>RLS: POST Patient/$rls<br/>params: geographic distribution, recency hints, ...
+    RLS->>RLS: Apply CMS patient-matching rule (§6) for Maria
+    RLS-->>App: endpoints likely to hold Maria's records
 ```
 
-Each RLS authenticated the app the same way it did at registration (its network's recognized credential path) and applied the same patient-matching rule. Purpose of use (`PATRQT`) travels with every request (can-spec §10.3).
+Run identically against all three networks — the only variation is which client credential each network recognized at registration:
+
+| Network | `$rls` result for Maria |
+|---|---|
+| Alpha | General Hospital |
+| Beta | Lakeside Clinic, County Health |
+| Gamma | Riverbend Medical |
+
+Purpose of use (`PATRQT`) is declared at the token request and travels with every downstream call (can-spec §10.3).
+
+**Why an operation rather than a payload?** The maximal-placeholder alternative is to skip `$rls` entirely and return the record-location results *inside the token response* itself. That works, but a real operation earns its place: the app can pass parameters — geographic distribution, recency or date-range hints, resource-type interests — and can re-query under the same patient-bound token as its needs evolve, without another round of identity ceremony. The token binding does the security work; the operation does the expressive work.
 
 ---
 
