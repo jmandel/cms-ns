@@ -113,25 +113,20 @@ sequenceDiagram
     participant App as BP Buddy
     participant CMS as CMS App Library
     participant Beta as Beta network
-    participant DH1 as Beta data holder 1<br/>auth server
-    participant DHn as Beta data holder N<br/>auth server
+    participant DH as Beta data holder<br/>auth servers
 
     opt network-level onboarding, per Beta policy (may be manual, may be skipped)
         App->>Beta: Request onboarding<br/>(link to CMS software statement)
         Beta->>CMS: Fetch and verify the statement
         Beta->>Beta: Review per Beta policy<br/>(possibly manual)
-        Beta-->>DH1: Approval signal: app okayed
-        Beta-->>DHn: Approval signal: app okayed
+        Beta-->>DH: Approval signal to its data holders: app okayed
     end
     App->>CMS: GET software-statement.jwt<br/>(fresh, ≤24h old)
     CMS-->>App: software_statement
-    par automated, per data holder
-        App->>DH1: POST /register (RFC 7591, software_statement)
-        DH1->>DH1: Verify CMS signature, library_status, key<br/>possession, Beta approval signal (if any)
-        DH1-->>App: client_id @ data holder 1
-    and
-        App->>DHn: POST /register (RFC 7591, software_statement)
-        DHn-->>App: client_id @ data holder N
+    loop for each Beta data holder, automated
+        App->>DH: POST /register (RFC 7591, software_statement)
+        DH->>DH: Verify CMS signature, library_status, key<br/>possession, Beta approval signal (if any)
+        DH-->>App: client_id at that data holder
     end
 ```
 
@@ -144,19 +139,15 @@ sequenceDiagram
     autonumber
     participant App as BP Buddy
     participant CA as Gamma trust-community CA
-    participant DH1 as Gamma data holder 1<br/>auth server
-    participant DHn as Gamma data holder N<br/>auth server
+    participant DH as Gamma data holder<br/>auth servers
 
-    Note over App,CA: One-time per-network step — may be manual
-    App->>CA: Certificate request (community vetting per<br/>Gamma policy, possibly manual — can lean<br/>on the same CMS Library evidence)
+    Note over App,CA: One-time per-network step (may be manual)
+    App->>CA: Certificate request (community vetting per<br/>Gamma policy, possibly manual, leaning<br/>on the same CMS Library evidence)
     CA-->>App: X.509 certificate
-    par automated, per data holder
-        App->>DH1: UDAP dynamic registration<br/>(RFC 7591, software statement signed with X.509 key)
-        DH1->>DH1: Validate chain to community CA<br/>(anchor published in NPD)
-        DH1-->>App: client_id @ data holder 1
-    and
-        App->>DHn: UDAP dynamic registration
-        DHn-->>App: client_id @ data holder N
+    loop for each Gamma data holder, automated
+        App->>DH: UDAP dynamic registration<br/>(RFC 7591, software statement signed with X.509 key)
+        DH->>DH: Validate chain to community CA<br/>(anchor published in NPD)
+        DH-->>App: client_id at that data holder
     end
 ```
 
