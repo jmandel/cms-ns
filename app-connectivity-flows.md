@@ -3,7 +3,13 @@
 **Flow walkthrough with sequence diagrams**
 *Companion to [apps-without-home-networks.md](apps-without-home-networks.md). Shows that a patient-facing app, carrying only its CMS App Library credentials, can register with networks that work in three different ways, locate records, and retrieve data — with no home network and no manual per-data-holder steps.*
 
-> **Conventions.** Record location uses a placeholder **`$rls`** FHIR operation throughout — input: patient identity context; output: a list of data-holder endpoints likely to hold records. The real wire profile is an open question (can-spec Appendix A1) and nothing here depends on its exact shape. Registration uses [RFC 7591 Dynamic Client Registration](https://www.rfc-editor.org/rfc/rfc7591) as the shared wire format wherever dynamic registration appears; the *software statement* presented varies by trust path.
+> **Conventions**
+>
+> - **Record location** uses a placeholder **`$rls`** FHIR operation throughout.
+>   - *Input:* patient identity context.
+>   - *Output:* a list of data-holder endpoints likely to hold records.
+>   - The real wire profile is an open question (can-spec Appendix A1); nothing here depends on its exact shape.
+> - **Registration** uses [RFC 7591 Dynamic Client Registration](https://www.rfc-editor.org/rfc/rfc7591) as the shared wire format wherever dynamic registration appears; the *software statement* presented varies by trust path.
 
 ---
 
@@ -62,7 +68,7 @@ sequenceDiagram
     participant NPD as NPD
 
     App->>NPD: List CMS-Aligned Networks + endpoints + registration metadata
-    NPD-->>App: Alpha (centralized reg, broker endpoint)<br/>Beta (per-data-holder dynreg, RLS endpoint, DH endpoints)<br/>Gamma (UDAP community, CA anchor, RLS endpoint, DH endpoints)
+    NPD-->>App: Alpha (centralized reg, broker endpoint)<br/>Beta (per-data-holder dynreg, RLS endpoint, data-holder endpoints)<br/>Gamma (UDAP community, CA anchor, RLS endpoint, data-holder endpoints)
 ```
 
 NPD tells the app (or the open-source library it uses) which door each network offers. The per-network variation is mechanical metadata, not relationship-building.
@@ -97,18 +103,18 @@ sequenceDiagram
     autonumber
     participant App as BP Buddy
     participant CMS as CMS App Library
-    participant DH1 as Beta data holder #1 AS
-    participant DHn as Beta data holder #N AS
+    participant DH1 as Beta data holder #1 auth server
+    participant DHn as Beta data holder #N auth server
 
     App->>CMS: GET software-statement.jwt (fresh, ≤24h old)
     CMS-->>App: software_statement
     par automated, per data holder, no human steps
         App->>DH1: POST /register (RFC 7591, software_statement)
         DH1->>DH1: Verify CMS signature, library_status, key possession
-        DH1-->>App: client_id @ DH1
+        DH1-->>App: client_id @ data holder #1
     and
         App->>DHn: POST /register (RFC 7591, software_statement)
-        DHn-->>App: client_id @ DHn
+        DHn-->>App: client_id @ data holder #N
     end
 ```
 
@@ -121,8 +127,8 @@ sequenceDiagram
     autonumber
     participant App as BP Buddy
     participant CA as Gamma trust-community CA
-    participant DH1 as Gamma data holder #1 AS
-    participant DHn as Gamma data holder #N AS
+    participant DH1 as Gamma data holder #1 auth server
+    participant DHn as Gamma data holder #N auth server
 
     Note over App,CA: One-time per-network step
     App->>CA: Certificate request (community vetting per Gamma policy,<br/>can lean on the same CMS Library evidence)
@@ -130,10 +136,10 @@ sequenceDiagram
     par automated, per data holder
         App->>DH1: UDAP dynamic registration<br/>(RFC 7591, software statement signed with X.509 key)
         DH1->>DH1: Validate chain to community CA (anchor published in NPD)
-        DH1-->>App: client_id @ DH1
+        DH1-->>App: client_id @ data holder #1
     and
         App->>DHn: UDAP dynamic registration
-        DHn-->>App: client_id @ DHn
+        DHn-->>App: client_id @ data holder #N
     end
 ```
 
@@ -207,7 +213,7 @@ sequenceDiagram
     autonumber
     actor Maria
     participant App as BP Buddy
-    participant LAS as Lakeside Clinic AS
+    participant LAS as Lakeside Clinic auth server
     participant LFHIR as Lakeside Clinic FHIR API
 
     Note over App,LAS: client_id already exists from Phase 2b dynreg —<br/>if a new endpoint appears later, the app dynregs on first contact, automatically
@@ -234,7 +240,7 @@ sequenceDiagram
     participant App as BP Buddy
     participant JWKS as bpbuddy.example/.well-known/jwks.json
     participant CMS as CMS App Library (monitor)
-    participant DH as Any data holder AS
+    participant DH as Any data holder auth server
 
     App->>JWKS: Publish key B alongside key A (overlap window)
     CMS->>JWKS: Routine monitoring — URI still serving valid JWKS
@@ -262,7 +268,7 @@ sequenceDiagram
     participant App as BP Buddy
     participant JWKS as jwks_uri (source of truth)
     participant CA as Gamma trust-community CA
-    participant DH as Gamma data holder AS
+    participant DH as Gamma data holder auth server
 
     App->>JWKS: Publish key B alongside key A
     alt 1. short-lived certs
