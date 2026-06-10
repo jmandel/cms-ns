@@ -11,6 +11,7 @@
 >   - The real wire profile is an open question (can-spec Appendix A1); nothing here depends on its exact shape.
 > - **Registration** uses [RFC 7591 Dynamic Client Registration](https://www.rfc-editor.org/rfc/rfc7591) as the shared wire format wherever dynamic registration appears; the *software statement* presented varies by trust path.
 > - **Identity**, per CMS HTE requirements: every token request that leads to RLS or data queries carries IAL2 identity evidence, and the resulting access token is bound to that verified patient.
+> - **Token requests** follow the [Blue Button CMS Aligned Networks pattern](https://bluebutton.cms.gov/cms-aligned-networks-documentation/): `client_credentials` grant with an asymmetric `client_assertion`, carrying a `cms_smart` extension whose claims include `purpose_of_use` (`PATRQT` for patient access) and the CSP-issued IAL2 `id_token`.
 
 ---
 
@@ -21,7 +22,7 @@
 | **BP Buddy** | Patient-facing app, listed in the Medicare App Library. Holds its own keys at `https://bpbuddy.example/.well-known/jwks.json`. |
 | **CMS App Library** | Publishes BP Buddy's listing and a short-lived [CMS-signed software statement](https://www.linkedin.com/pulse/software-statements-medicare-app-library-josh-mandel-md/) at `/app-library/apps/bp-buddy/software-statement.jwt`. |
 | **NPD** | National Provider Directory: networks, endpoints, trust-anchor metadata. |
-| **Alpha Health Network** | Offers **centralized registration through a developer portal**: a few manual steps, then one client ID good for the whole network; Alpha handles connectivity to its edge data holders (the "Epic model"). |
+| **Alpha Health Network** | Offers **centralized registration through a developer portal**: a few manual steps, then one client ID good for the whole network; apps query each Alpha data holder's FHIR endpoint directly (the "Epic model"). |
 | **Beta Exchange** | Offers **CMS-software-statement dynamic registration** directly at each of its data holders' authorization servers; Beta itself runs the RLS and publishes endpoints. |
 | **Gamma Trust Network** | A **UDAP trust community**: one-time per-network credentialing with Gamma's recognized CA, then UDAP dynamic registration at each data holder. |
 | **Maria** | A patient, IAL2-verified through a CMS-approved credential service provider (CSP). |
@@ -69,7 +70,7 @@ sequenceDiagram
     participant NPD as NPD
 
     App->>NPD: List CMS-Aligned Networks + endpoints + registration metadata
-    NPD-->>App: Alpha (centralized reg, broker endpoint)<br/>Beta (per-data-holder dynreg, RLS endpoint, data-holder endpoints)<br/>Gamma (UDAP community, CA anchor, RLS endpoint, data-holder endpoints)
+    NPD-->>App: Alpha (centralized reg, facilitated FHIR)<br/>Beta (per-data-holder dynreg, RLS endpoint, data-holder endpoints)<br/>Gamma (UDAP community, CA anchor, RLS endpoint, data-holder endpoints)
 ```
 
 NPD tells the app (or the client library it uses) how each network handles registration, as machine-readable metadata.
@@ -177,8 +178,8 @@ sequenceDiagram
     Maria->>App: "Find my records"
     App->>CSP: IAL2 authentication (standalone launch)
     CSP-->>App: id_token (Maria, IAL2, fresh auth_time)
-    App->>NAS: Token request: private_key_jwt + IAL2 id_token<br/>purpose: PATRQT
-    NAS->>NAS: Verify client credential and id_token<br/>(aud↔app binding, auth_time ≤ 300s, jti replay — can-spec §9)
+    App->>NAS: POST /token: client_credentials + client_assertion<br/>cms_smart: purpose_of_use PATRQT, IAL2 id_token
+    NAS->>NAS: Verify client_assertion against the app's jwks_uri<br/>Validate id_token freshness and replay (can-spec §9)
     NAS-->>App: access_token bound to Maria, RLS scope
     App->>RLS: POST Patient/$rls<br/>params: geographic distribution, recency hints, ...
     RLS->>RLS: Apply CMS patient-matching rule (§6) for Maria
@@ -203,27 +204,28 @@ Purpose of use (`PATRQT`) is declared at the token request and travels with ever
 
 What happens next depends only on the network's shape.
 
-### 4a. Via Alpha (brokered): the network is the FHIR endpoint
+### 4a. Via Alpha (facilitated): one registration, direct queries to each data holder
+
+Alpha centralized the registration, not the conversation. The app holds one Alpha-wide client_id and gets its tokens from Alpha's authorization server, then talks to each data holder's FHIR endpoint directly:
 
 ```mermaid
 sequenceDiagram
     autonumber
     participant App as BP Buddy
     participant AAS as Alpha authorization server
-    participant Broker as Alpha broker FHIR API
-    participant GH as General Hospital
+    participant DH as Alpha data holder<br/>FHIR endpoints
 
     Note over App: Maria's IAL2 session is current (fresh auth_time)
-    App->>AAS: Token request: private_key_jwt + IAL2 id_token<br/>(client_id from Phase 2a, purpose: PATRQT)
-    AAS->>AAS: Verify id_token aud↔app binding, auth_time ≤ 300s,<br/>jti replay check (can-spec §9)
-    AAS-->>App: access_token bound to Maria (scopes per her permissions)
-    App->>Broker: GET Observation?patient=...&category=vital-signs
-    Broker->>GH: (network-internal retrieval)
-    GH-->>Broker: results
-    Broker-->>App: FHIR Bundle
+    App->>AAS: POST /token: client_credentials + client_assertion<br/>(client_id from Phase 2a)<br/>cms_smart: purpose_of_use PATRQT, IAL2 id_token
+    AAS->>AAS: Verify client_assertion against the app's jwks_uri<br/>Validate id_token, match patient (§6)
+    AAS-->>App: access_token bound to Maria,<br/>honored by Alpha data holders
+    loop for each Alpha data holder holding records
+        App->>DH: GET Observation?patient=...&category=vital-signs
+        DH-->>App: FHIR Bundle
+    end
 ```
 
-### 4b. Via Beta / Gamma (federated): the data holder is the FHIR endpoint
+### 4b. Via Beta / Gamma: per-data-holder tokens from each data holder's auth server
 
 ```mermaid
 sequenceDiagram
@@ -233,14 +235,14 @@ sequenceDiagram
     participant LFHIR as Lakeside Clinic FHIR API
 
     Note over App,LAS: client_id already exists from Phase 2b dynreg —<br/>if a new endpoint appears later, the app dynregs on first contact, automatically
-    App->>LAS: Token request: private_key_jwt + IAL2 id_token<br/>(purpose: PATRQT)
-    LAS->>LAS: Verify id_token aud↔app binding, auth_time ≤ 300s,<br/>jti replay check (can-spec §9)
+    App->>LAS: POST /token: client_credentials + client_assertion<br/>cms_smart: purpose_of_use PATRQT, IAL2 id_token
+    LAS->>LAS: Verify client_assertion against the app's jwks_uri<br/>Validate id_token freshness and replay (can-spec §9)
     LAS-->>App: access_token + refresh_token (rolling 90-day, §9)
     App->>LFHIR: GET Observation / MedicationRequest / DocumentReference ...
     LFHIR-->>App: FHIR Bundles (USCDI v3 scope per granted scopes)
 ```
 
-The Gamma flow is identical from here; the UDAP-vs-CMS-statement difference was consumed at registration time. Runtime is the same everywhere: `private_key_jwt`, a `kid`, an IAL2 id_token, a patient-bound access token.
+The Gamma flow is identical from here; the UDAP-vs-CMS-statement difference was consumed at registration time. Runtime is the same everywhere: a `client_credentials` grant with an asymmetric `client_assertion` (its `kid` resolvable at the app's `jwks_uri`), a `cms_smart` extension carrying the IAL2 `id_token`, and a patient-bound access token. The only thing that varies is which authorization server issues the token: Alpha's network server, or each Beta and Gamma data holder's own.
 
 ---
 
@@ -272,36 +274,7 @@ The requirement to write down:
 
 > Any network- or community-issued credential **MUST** remain automatically synchronized with the app's published `jwks_uri`. Issuance and re-issuance MUST be automatable end-to-end; key rotation MUST NOT require manual steps at any network or data holder.
 
-Three conformant mechanisms (any may be offered; at least one MUST be):
-
-1. **Short-lived certs minted on demand.** The CA issues certificates with TTLs comparable to the CMS statement (hours–days), minted against the current contents of the app's `jwks_uri`. Rotation is absorbed at the next mint. This is the cleanest option: the certificate becomes a projection of the JWKS rather than a competing source of truth.
-2. **CA-side monitoring with automatic re-issuance.** The CA watches the app's `jwks_uri` (which CMS verified the app controls, and monitors) and re-issues automatically when keys change.
-3. **App-triggered re-issuance over an authenticated channel.** During the overlap window, the app calls the CA's re-issuance endpoint, authenticating with a JWT signed by a not-yet-retired key; the CA issues a cert for the new key and revokes/expires the old.
-
-```mermaid
-sequenceDiagram
-    autonumber
-    participant App as BP Buddy
-    participant JWKS as jwks_uri (source of truth)
-    participant CA as Gamma trust-community CA
-    participant DH as Gamma data holder auth server
-
-    App->>JWKS: Publish key B alongside key A
-    alt 1. short-lived certs
-        App->>CA: Routine cert mint (automated)
-        CA->>JWKS: Read current keys
-        CA-->>App: Cert for key B (TTL: hours–days)
-    else 2. CA monitors jwks_uri
-        CA->>JWKS: Detect key change
-        CA-->>App: Re-issued cert for key B (push/pickup)
-    else 3. app-triggered re-issuance
-        App->>CA: Re-issue request, signed with key A (still valid)
-        CA->>JWKS: Confirm key B is published
-        CA-->>App: Cert for key B (key-A cert expired/revoked)
-    end
-    App->>DH: UDAP token request with key-B cert
-    DH-->>App: access_token (no manual steps anywhere)
-```
+Approaches that could satisfy this include short-lived certificates minted against the current contents of the `jwks_uri`, CA-side monitoring with automatic re-issuance, or app-triggered re-issuance authenticated with a key that has not yet been retired. Which of these a community offers is its own business; the rule is the only part worth standardizing.
 
 The general principle: **the `jwks_uri` is the single source of truth for the app's keys, and every other credential format is a derived, auto-refreshing view of it.** A network is free to issue certificates at registration time in whatever flavor its community prefers, so long as those certificates track the JWKS automatically for the life of the registration.
 
@@ -312,10 +285,10 @@ The general principle: **the `jwks_uri` is the single source of truth for the ap
 | | Alpha (centralized) | Beta (CMS-statement dynreg) | Gamma (UDAP) |
 |---|---|---|---|
 | Per-network step (may be manual) | portal signup: paste statement link, ad-hoc check | optional network-level approval, invisible to the app | community cert issuance per Gamma policy |
-| Per-data-holder registrations | 0 (network handles) | N, all automated | N, all automated |
+| Per-data-holder registrations | 0 (one network-wide client_id) | N, all automated | N, all automated |
 | Per-data-holder **manual** steps | **0** | **0** | **0** |
 | Trust signal verified | CMS statement | CMS statement | X.509 chain → NPD anchor |
-| Runtime auth | private_key_jwt + IAL2 id_token | same | same |
+| Runtime auth | client_credentials + cms_smart (IAL2 id_token) | same | same |
 
 Throughout the walkthrough, BP Buddy never:
 
