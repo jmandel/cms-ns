@@ -78,7 +78,7 @@ NPD tells the app (or the open-source library it uses) which door each network o
 
 ## Phase 2 — Registering with each network
 
-The three networks span an automation spectrum: Alpha's portal involves a human and a few manual steps; Beta's dynamic registration involves neither. Both are conformant, because the manual steps are **per network** — bounded, one-time — never per data holder.
+Any of the three may put a human in the loop at the network level. Alpha's portal makes it visible. But Beta's and Gamma's data holders may equally look for a signal from their own network that an app is okay to let in — and the network behind that signal may have run a manual review. All of it is conformant, because whatever manual steps exist attach to the **network**, once; the app's interaction with each **data holder** stays automatic.
 
 ### 2a. Alpha — centralized registration via a developer portal (one client ID for the whole network)
 
@@ -117,9 +117,10 @@ sequenceDiagram
 
     App->>CMS: GET software-statement.jwt (fresh, ≤24h old)
     CMS-->>App: software_statement
-    par automated, per data holder, no human steps
+    Note over DH1,DHn: Beta may have okayed the app at the network level first,<br/>possibly manually — its data holders consult that signal under the hood
+    par automated, per data holder
         App->>DH1: POST /register (RFC 7591, software_statement)
-        DH1->>DH1: Verify CMS signature, library_status, key possession
+        DH1->>DH1: Verify CMS signature, library_status, key possession<br/>Check Beta's approval signal for this app
         DH1-->>App: client_id @ data holder #1
     and
         App->>DHn: POST /register (RFC 7591, software_statement)
@@ -127,7 +128,7 @@ sequenceDiagram
     end
 ```
 
-More registrations than Alpha — but every one is a machine-to-machine call a library performs in a loop. Per-data-holder *work*, zero per-data-holder *manual steps*.
+More registrations than Alpha — but every one is a machine-to-machine call a library performs in a loop. Per-data-holder *work*, zero per-data-holder *manual steps*. That does not mean nobody ever looked: Beta may run its own network-level onboarding before its data holders start saying yes to an app, and that step can be as manual as Beta likes. What matters is that the app experiences it once per network, not once per endpoint.
 
 ### 2c. Gamma — UDAP trust community
 
@@ -153,6 +154,8 @@ sequenceDiagram
 ```
 
 Gamma chose a CA-anchored trust path. The app does one custom per-network step (getting the cert), then the per-data-holder layer is automated again. Acceptable under the invariant — and Gamma competes on whether that extra step is worth what its network offers.
+
+Of the three, Gamma looks closest to needing no network-level step beyond certificate issuance. That is not a promise. The hard problems here are policy, not protocol — who may join the trust community, on what terms, what the community does when an app misbehaves — and a CA-anchored handshake does not settle them. Certificate issuance *is* Gamma's network-level review, manual where its policy says so, and Gamma's data holders, like Beta's, may still consult a network-level signal before honoring a registration.
 
 > Three doors, one artifact: a portal pre-fills its manual form from the statement (Alpha), an RFC 7591 endpoint accepts it directly (Beta), a trust community issues against the same evidence (Gamma). The receiving side routes signature validation by issuer — CMS JWKS for CMS statements, community CA chain for UDAP — exactly as can-spec §7.1 describes. Nowhere did any network ask "who is your home network?", because nobody needed one to decide whether to trust the app.
 
@@ -310,7 +313,7 @@ The general principle: **the `jwks_uri` is the single source of truth for the ap
 
 | | Alpha (centralized) | Beta (CMS-statement dynreg) | Gamma (UDAP) |
 |---|---|---|---|
-| Per-network custom work | portal signup: paste statement link, ad-hoc check (one-time) | none beyond discovery | obtain community cert (one-time) |
+| Per-network step (may be manual) | portal signup: paste statement link, ad-hoc check | network-level approval possible, invisible to the app | community cert issuance per Gamma policy |
 | Per-data-holder registrations | 0 (network handles) | N, all automated | N, all automated |
 | Per-data-holder **manual** steps | **0** | **0** | **0** |
 | Trust signal verified | CMS statement | CMS statement | X.509 chain → NPD anchor |
