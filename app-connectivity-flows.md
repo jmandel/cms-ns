@@ -44,7 +44,7 @@ sequenceDiagram
     participant Cert as Certifying body<br/>(e.g. DirectTrust / CARIN / DiME)
     participant CMS as CMS App Library
 
-    Dev->>Kit: Run conformance suite (SMART, registration, $rls client)
+    Dev->>Kit: Run conformance suite (registration, token issuance, $rls client)
     Kit-->>Dev: Passing results (machine-verifiable)
     Dev->>Cert: Submit results + attestations
     Cert-->>Dev: Certification
@@ -56,7 +56,7 @@ sequenceDiagram
     end
 ```
 
-No network appears in this diagram. That is the point: the trust decision is made once, by the party CMS already trusts to make it — itself.
+No network appears in this diagram: the trust decision is made once, by CMS.
 
 ---
 
@@ -186,7 +186,7 @@ Run identically against all three networks — the only variation is which clien
 
 Purpose of use (`PATRQT`) is declared at the token request and travels with every downstream call (can-spec §10.3).
 
-**Why an operation rather than a payload?** The maximal-placeholder alternative is to skip `$rls` entirely and return the record-location results *inside the token response* itself. That works, but a real operation earns its place: the app can pass parameters — geographic distribution, recency or date-range hints, resource-type interests — and can re-query under the same patient-bound token as its needs evolve, without another round of identity ceremony. The token binding does the security work; the operation does the expressive work.
+**Why an operation rather than a payload?** The maximal-placeholder alternative is to skip `$rls` entirely and return the record-location results *inside the token response* itself. That works, but a real operation earns its place: the app can pass parameters — geographic distribution, recency or date-range hints, resource-type interests — and can re-query under the same patient-bound token as its needs evolve, without another round of identity ceremony.
 
 ---
 
@@ -199,14 +199,15 @@ What happens next depends on the network's shape — and only on that.
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Maria
     participant App as BP Buddy
     participant AAS as Alpha authorization server
     participant Broker as Alpha broker FHIR API
     participant GH as General Hospital
 
-    App->>AAS: SMART standalone launch for Maria<br/>(IAL2 id_token, client_id from Phase 2a)
-    AAS-->>App: access_token (scopes granted per Maria's authorization)
+    Note over App: Maria's IAL2 session is current (fresh auth_time)
+    App->>AAS: Token request: private_key_jwt + IAL2 id_token<br/>(client_id from Phase 2a, purpose: PATRQT)
+    AAS->>AAS: Verify id_token aud↔app binding, auth_time ≤ 300s,<br/>jti replay check (can-spec §9)
+    AAS-->>App: access_token bound to Maria (scopes per her permissions)
     App->>Broker: GET Observation?patient=...&category=vital-signs
     Broker->>GH: (network-internal retrieval)
     GH-->>Broker: results
@@ -218,26 +219,25 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Maria
     participant App as BP Buddy
     participant LAS as Lakeside Clinic auth server
     participant LFHIR as Lakeside Clinic FHIR API
 
     Note over App,LAS: client_id already exists from Phase 2b dynreg —<br/>if a new endpoint appears later, the app dynregs on first contact, automatically
-    App->>LAS: SMART standalone launch for Maria (IAL2 id_token)
+    App->>LAS: Token request: private_key_jwt + IAL2 id_token<br/>(purpose: PATRQT)
     LAS->>LAS: Verify id_token aud↔app binding, auth_time ≤ 300s,<br/>jti replay check (can-spec §9)
     LAS-->>App: access_token + refresh_token (rolling 90-day, §9)
     App->>LFHIR: GET Observation / MedicationRequest / DocumentReference ...
     LFHIR-->>App: FHIR Bundles (USCDI v3 scope per granted scopes)
 ```
 
-The Gamma flow is byte-identical from here — the UDAP-vs-CMS-statement difference was consumed entirely at registration time. **Runtime never changes: `private_key_jwt`, a `kid`, SMART scopes.**
+The Gamma flow is byte-identical from here — the UDAP-vs-CMS-statement difference was consumed entirely at registration time. **Runtime never changes: `private_key_jwt`, a `kid`, an IAL2 id_token, a patient-bound access token.**
 
 ---
 
 ## Phase 5 — Pressure test: key rotation
 
-The app's authoritative key material lives at its CMS-verified `jwks_uri`, and the app rotates keys there on its own schedule, with no CMS involvement. How each trust path absorbs rotation is the difference between a system that runs itself and one that quietly reintroduces manual per-network ceremonies.
+The app's authoritative key material lives at its CMS-verified `jwks_uri`, and the app rotates keys there on its own schedule, with no CMS involvement. How each trust path absorbs rotation determines whether rotation stays automatic or becomes a manual per-network ceremony.
 
 **CMS-statement paths (Alpha, Beta): rotation is free.** The statement binds the *URI*, not a key. Data holders resolve the app's current keys at token time via `kid` lookup against the live JWKS. The app publishes the new key alongside the old (standard overlap window), starts signing with the new `kid`, retires the old. Nothing to re-issue, nobody to notify.
 
@@ -306,7 +306,7 @@ The general principle: **the `jwks_uri` is the single source of truth for the ap
 | Per-data-holder registrations | 0 (network handles) | N, all automated | N, all automated |
 | Per-data-holder **manual** steps | **0** | **0** | **0** |
 | Trust signal verified | CMS statement | CMS statement | X.509 chain → NPD anchor |
-| Runtime auth | SMART + private_key_jwt | same | same |
+| Runtime auth | private_key_jwt + IAL2 id_token | same | same |
 
 And the things BP Buddy never did, anywhere in this story:
 
@@ -316,4 +316,4 @@ And the things BP Buddy never did, anywhere in this story:
 - never coordinated a key rotation by hand — every credential tracked its `jwks_uri` automatically;
 - never repeated its vetting — the CMS Library review happened once and traveled as a signed artifact.
 
-A developer who doesn't want to do even *this* much can hand Phases 1–4 to a platform, an open-source library, or skip connectivity entirely and receive Maria's data by her choice to share from an app that does connect. That's delegation as a market offering — chosen, not mandated.
+A developer who doesn't want to do even *this* much can hand Phases 1–4 to a platform, an open-source library, or skip connectivity entirely and receive Maria's data by her choice to share from an app that does connect. That's delegation as a market offering.
