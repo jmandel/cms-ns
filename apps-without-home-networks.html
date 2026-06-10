@@ -39,7 +39,8 @@
   <nav class="site-nav">
     <a href="index.html">CAN Spec</a> ·
     <a href="apps-without-home-networks.html">Apps Without Home Networks</a> ·
-    <a href="app-connectivity-flows.html">Connectivity Flows</a>
+    <a href="app-connectivity-flows.html">Connectivity Flows</a> ·
+    <a href="example-artifacts/index.html">Artifacts</a>
   </nav>
   <div id="content"><p>Loading…</p></div>
 </main>
@@ -56,13 +57,10 @@ const renderer = {
     return false;
   },
   link(href, title, text) {
-    const map = {
-      'can-spec.md': 'index.html',
-      'apps-without-home-networks.md': 'apps-without-home-networks.html',
-      'app-connectivity-flows.md': 'app-connectivity-flows.html',
-    };
-    const [path, frag] = href.split('#');
-    if (map[path]) href = map[path] + (frag ? '#' + frag : '');
+    if (!/^https?:/.test(href)) {
+      if (href.startsWith('can-spec.md')) href = href.replace('can-spec.md', 'index.html');
+      else href = href.replace(/\.md(#|$)/, '.html$1');
+    }
     return '<a href="' + href + '"' + (title ? ' title="' + title + '"' : '') + '>' + text + '</a>';
   }
 };

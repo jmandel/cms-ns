@@ -57,6 +57,8 @@ sequenceDiagram
     end
 ```
 
+*Example artifacts: [fetching the CMS-signed software statement, with the decoded JWT](example-artifacts/phase0-software-statement.md).*
+
 No network appears in this diagram: the trust decision is made once, by CMS.
 
 ---
@@ -72,6 +74,8 @@ sequenceDiagram
     App->>NPD: List CMS-Aligned Networks + endpoints + registration metadata
     NPD-->>App: Alpha (centralized reg, facilitated FHIR)<br/>Beta (per-data-holder dynreg, RLS endpoint, data-holder endpoints)<br/>Gamma (UDAP community, CA anchor, RLS endpoint, data-holder endpoints)
 ```
+
+*Example artifacts: [the NPD request and network listing](example-artifacts/phase1-npd-discovery.md).*
 
 NPD tells the app (or the client library it uses) how each network handles registration, as machine-readable metadata.
 
@@ -102,6 +106,8 @@ sequenceDiagram
     AAS-->>Dev: client_id (valid for all Alpha data holders)
 ```
 
+*Example artifacts: [the statement link, a key-possession proof JWT, and the provisioned client_id](example-artifacts/phase2a-alpha-portal.md).*
+
 These manual steps are acceptable because they happen once per network; the invariant only forbids manual work per data holder. The CMS statement still does its job: the portal pre-fills its form from a signed artifact and verifies one signature instead of re-vetting the app. The details of the ad-hoc verification are Alpha's business; this walkthrough deliberately leaves them unspecified, and the spec should too.
 
 One registration covers every data holder on Alpha; the network absorbs the edge complexity as part of its product.
@@ -131,6 +137,8 @@ sequenceDiagram
     end
 ```
 
+*Example artifacts: [the RFC 7591 request and response at a Beta data holder](example-artifacts/phase2b-beta-dynreg.md).*
+
 Each registration is a machine-to-machine call that a client library performs in a loop, so the larger count compared to Alpha costs nothing manual. The optional block is where Beta's own judgment lives: it may onboard apps before its data holders accept them, with as much manual review as its policy requires, or it may skip that layer and let the CMS statement carry the decision. Either way, its data holders act on the signal automatically, and the app sees at most one review per network.
 
 ### 2c. Gamma — UDAP trust community
@@ -151,6 +159,8 @@ sequenceDiagram
         DH-->>App: client_id at that data holder
     end
 ```
+
+*Example artifacts: [the UDAP software statement with its x5c certificate chain](example-artifacts/phase2c-gamma-udap.md).*
 
 Gamma chose a CA-anchored trust path. The app does one custom per-network step (obtaining the certificate), and the per-data-holder layer is automated from there. This satisfies the invariant, and Gamma competes on whether the extra step is worth what its network offers.
 
@@ -186,6 +196,8 @@ sequenceDiagram
     RLS-->>App: endpoints likely to hold Maria's records
 ```
 
+*Example artifacts: [the IAL2 id_token, cms_smart client_assertion, token response, and $rls exchange](example-artifacts/phase3-rls.md).*
+
 The app repeats this flow at Alpha, Beta, and Gamma. The only difference between them is which client credential the network recognized at registration:
 
 | Network | `$rls` result for Maria |
@@ -202,11 +214,11 @@ Purpose of use (`PATRQT`) is declared at the token request and travels with ever
 
 ## Phase 4 — Retrieving data
 
-What happens next depends only on the network's shape.
+In all three networks the app queries each data holder's FHIR endpoint directly. The flavors differ in one place: which authorization server issues the token.
 
-### 4a. Via Alpha (facilitated): one registration, direct queries to each data holder
+### 4a. Alpha: tokens from the network's authorization server
 
-Alpha centralized the registration, not the conversation. The app holds one Alpha-wide client_id and gets its tokens from Alpha's authorization server, then talks to each data holder's FHIR endpoint directly:
+The app uses its one Alpha-wide client_id; Alpha's authorization server issues a token that Alpha data holders honor:
 
 ```mermaid
 sequenceDiagram
@@ -225,7 +237,9 @@ sequenceDiagram
     end
 ```
 
-### 4b. Via Beta / Gamma: per-data-holder tokens from each data holder's auth server
+*Example artifacts: [the Alpha token request and a direct FHIR query](example-artifacts/phase4a-alpha-facilitated.md).*
+
+### 4b. Beta and Gamma: tokens from each data holder's authorization server
 
 ```mermaid
 sequenceDiagram
@@ -241,6 +255,8 @@ sequenceDiagram
     App->>LFHIR: GET Observation / MedicationRequest / DocumentReference ...
     LFHIR-->>App: FHIR Bundles (USCDI v3 scope per granted scopes)
 ```
+
+*Example artifacts: [the Lakeside token request, refresh_token, and FHIR query](example-artifacts/phase4b-federated.md).*
 
 The Gamma flow is identical from here; the UDAP-vs-CMS-statement difference was consumed at registration time. Runtime is the same everywhere: a `client_credentials` grant with an asymmetric `client_assertion` (its `kid` resolvable at the app's `jwks_uri`), a `cms_smart` extension carrying the IAL2 `id_token`, and a patient-bound access token. The only thing that varies is which authorization server issues the token: Alpha's network server, or each Beta and Gamma data holder's own.
 
@@ -267,6 +283,8 @@ sequenceDiagram
     DH-->>App: access_token (rotation invisible to the trust layer)
     App->>JWKS: Retire key A after overlap window
 ```
+
+*Example artifacts: [the JWKS before and during overlap, and a client_assertion signed with the new key](example-artifacts/phase5-key-rotation.md).*
 
 **Network-issued certificate paths (Gamma) need a rule here**, because an X.509 certificate binds a specific key. Once the app rotates, every certificate a network CA has issued is out of date, and if re-syncing means emailing the CA, rotation has become a manual per-network step.
 
