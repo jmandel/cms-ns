@@ -128,7 +128,7 @@ sequenceDiagram
     App->>CA: Certificate request (community vetting per Gamma policy,<br/>can lean on the same CMS Library evidence)
     CA-->>App: X.509 certificate
     par automated, per data holder
-        App->>DH1: UDAP dynamic registration<br/>(RFC 7591; software statement signed with X.509 key)
+        App->>DH1: UDAP dynamic registration<br/>(RFC 7591, software statement signed with X.509 key)
         DH1->>DH1: Validate chain to community CA (anchor published in NPD)
         DH1-->>App: client_id @ DH1
     and
@@ -192,7 +192,7 @@ sequenceDiagram
     participant Broker as Alpha broker FHIR API
     participant GH as General Hospital
 
-    App->>AAS: SMART standalone launch for Maria<br/>(IAL2 id_token; client_id from Phase 2a)
+    App->>AAS: SMART standalone launch for Maria<br/>(IAL2 id_token, client_id from Phase 2a)
     AAS-->>App: access_token (scopes granted per Maria's authorization)
     App->>Broker: GET Observation?patient=...&category=vital-signs
     Broker->>GH: (network-internal retrieval)
@@ -275,7 +275,7 @@ sequenceDiagram
     else 3. app-triggered re-issuance
         App->>CA: Re-issue request, signed with key A (still valid)
         CA->>JWKS: Confirm key B is published
-        CA-->>App: Cert for key B; key-A cert expired/revoked
+        CA-->>App: Cert for key B — key-A cert expired/revoked
     end
     App->>DH: UDAP token request with key-B cert
     DH-->>App: access_token — no manual steps anywhere
