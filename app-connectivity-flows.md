@@ -21,7 +21,7 @@
 | **BP Buddy** | Patient-facing app, listed in the Medicare App Library. Holds its own keys at `https://bpbuddy.example/.well-known/jwks.json`. |
 | **CMS App Library** | Publishes BP Buddy's listing and a short-lived [CMS-signed software statement](https://www.linkedin.com/pulse/software-statements-medicare-app-library-josh-mandel-md/) at `/app-library/apps/bp-buddy/software-statement.jwt`. |
 | **NPD** | National Provider Directory: networks, endpoints, trust-anchor metadata. |
-| **Alpha Health Network** | Offers **centralized registration**: one client ID at Alpha's authorization server; Alpha handles connectivity to its edge data holders (the "Epic model"). |
+| **Alpha Health Network** | Offers **centralized registration through a developer portal**: a few manual steps, then one client ID good for the whole network; Alpha handles connectivity to its edge data holders (the "Epic model"). |
 | **Beta Exchange** | Offers **CMS-software-statement dynamic registration** directly at each of its data holders' authorization servers; Beta itself runs the RLS and publishes endpoints. |
 | **Gamma Trust Network** | A **UDAP trust community**: one-time per-network credentialing with Gamma's recognized CA, then UDAP dynamic registration at each data holder. |
 | **Maria** | A patient, IAL2-verified through a CMS-approved credential service provider (CSP). |
@@ -78,22 +78,30 @@ NPD tells the app (or the open-source library it uses) which door each network o
 
 ## Phase 2 — Registering with each network
 
-### 2a. Alpha — centralized registration (one client ID for the whole network)
+The three networks span an automation spectrum: Alpha's portal involves a human and a few manual steps; Beta's dynamic registration involves neither. Both are conformant, because the manual steps are **per network** — bounded, one-time — never per data holder.
+
+### 2a. Alpha — centralized registration via a developer portal (one client ID for the whole network)
+
+Alpha runs a developer portal, and registering involves a human:
 
 ```mermaid
 sequenceDiagram
     autonumber
-    participant App as BP Buddy
+    actor Dev as BP Buddy developer
+    participant Portal as Alpha developer portal
     participant CMS as CMS App Library
     participant AAS as Alpha authorization server
 
-    App->>CMS: GET /apps/bp-buddy/software-statement.jwt
-    CMS-->>App: software_statement (signed JWT, library_status: active)
-    App->>AAS: POST /register (RFC 7591)<br/>software_statement = CMS JWT
-    AAS->>AAS: Verify CMS signature (published CMS JWKS)<br/>Check library_status = active<br/>Read client_name, jwks_uri, contacts
-    Note over App,AAS: Optional anti-junk check: app proves key possession with a<br/>short-lived self-signed JWT verifiable against its CMS-verified jwks_uri
-    AAS-->>App: client_id (valid for all Alpha data holders)
+    Dev->>Portal: Sign up, paste a link to the app's<br/>CMS software statement (or the statement itself)
+    Portal->>CMS: Fetch /apps/bp-buddy/software-statement.jwt
+    Portal->>Portal: Verify CMS signature, library_status = active<br/>Pre-fill app name, URIs, contacts from the statement
+    Portal->>Dev: Ad-hoc verification, per Alpha policy<br/>(e.g. domain-ownership challenge or key-possession proof)
+    Dev-->>Portal: Complete the check
+    Portal->>AAS: Provision registration
+    AAS-->>Dev: client_id (valid for all Alpha data holders)
 ```
+
+Manual steps, and that is fine: they happen once, per network, and the invariant only forbids manual work per data holder. The CMS statement still does its job here — the portal pre-fills its form from a signed artifact and verifies one signature instead of re-vetting the app. What the ad-hoc verification looks like is Alpha's business; this walkthrough deliberately doesn't specify it, and neither should the spec.
 
 One registration covers every data holder on Alpha — the network absorbed the edge complexity as part of its product.
 
@@ -146,7 +154,7 @@ sequenceDiagram
 
 Gamma chose a CA-anchored trust path. The app does one custom per-network step (getting the cert), then the per-data-holder layer is automated again. Acceptable under the invariant — and Gamma competes on whether that extra step is worth what its network offers.
 
-> Three doors, one wire format. The receiving authorization server routes signature validation by issuer — CMS JWKS for CMS statements, community CA chain for UDAP — exactly as can-spec §7.1 describes. Nowhere did any network ask "who is your home network?", because nobody needed one to decide whether to trust the app.
+> Three doors, one artifact: a portal pre-fills its manual form from the statement (Alpha), an RFC 7591 endpoint accepts it directly (Beta), a trust community issues against the same evidence (Gamma). The receiving side routes signature validation by issuer — CMS JWKS for CMS statements, community CA chain for UDAP — exactly as can-spec §7.1 describes. Nowhere did any network ask "who is your home network?", because nobody needed one to decide whether to trust the app.
 
 ---
 
@@ -302,7 +310,7 @@ The general principle: **the `jwks_uri` is the single source of truth for the ap
 
 | | Alpha (centralized) | Beta (CMS-statement dynreg) | Gamma (UDAP) |
 |---|---|---|---|
-| Per-network custom work | pick the broker endpoint | none beyond discovery | obtain community cert (one-time) |
+| Per-network custom work | portal signup: paste statement link, ad-hoc check (one-time) | none beyond discovery | obtain community cert (one-time) |
 | Per-data-holder registrations | 0 (network handles) | N, all automated | N, all automated |
 | Per-data-holder **manual** steps | **0** | **0** | **0** |
 | Trust signal verified | CMS statement | CMS statement | X.509 chain → NPD anchor |
@@ -311,7 +319,7 @@ The general principle: **the `jwks_uri` is the single source of truth for the ap
 And the things BP Buddy never did, anywhere in this story:
 
 - never designated a home network, or asked any network to vouch for it;
-- never emailed a JWKS URL or filled in a portal form to reach a data holder;
+- never emailed a JWKS URL, and never touched a portal *per data holder* — Alpha's portal was one signup for its whole network;
 - never paid a per-network access fee;
 - never coordinated a key rotation by hand — every credential tracked its `jwks_uri` automatically;
 - never repeated its vetting — the CMS Library review happened once and traveled as a signed artifact.
