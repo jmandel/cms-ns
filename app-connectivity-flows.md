@@ -112,23 +112,29 @@ sequenceDiagram
     autonumber
     participant App as BP Buddy
     participant CMS as CMS App Library
-    participant DH1 as Beta data holder #1 auth server
-    participant DHn as Beta data holder #N auth server
+    participant Beta as Beta network
+    participant DH1 as Beta data holder 1<br/>auth server
+    participant DHn as Beta data holder N<br/>auth server
 
-    App->>CMS: GET software-statement.jwt (fresh, ≤24h old)
+    Note over App,Beta: One-time per-network step — may be manual
+    App->>Beta: Request onboarding<br/>(link to CMS software statement)
+    Beta->>CMS: Fetch and verify the statement
+    Beta->>Beta: Network-level review<br/>per Beta policy (possibly manual)
+    Beta-->>DH1: Approval signal: app okayed
+    Beta-->>DHn: Approval signal: app okayed
+    App->>CMS: GET software-statement.jwt<br/>(fresh, ≤24h old)
     CMS-->>App: software_statement
-    Note over DH1,DHn: Beta may have okayed the app at the network level first,<br/>possibly manually — its data holders consult that signal under the hood
     par automated, per data holder
         App->>DH1: POST /register (RFC 7591, software_statement)
-        DH1->>DH1: Verify CMS signature, library_status, key possession<br/>Check Beta's approval signal for this app
-        DH1-->>App: client_id @ data holder #1
+        DH1->>DH1: Verify CMS signature, library_status,<br/>key possession, Beta approval signal
+        DH1-->>App: client_id @ data holder 1
     and
         App->>DHn: POST /register (RFC 7591, software_statement)
-        DHn-->>App: client_id @ data holder #N
+        DHn-->>App: client_id @ data holder N
     end
 ```
 
-More registrations than Alpha — but every one is a machine-to-machine call a library performs in a loop. Per-data-holder *work*, zero per-data-holder *manual steps*. That does not mean nobody ever looked: Beta may run its own network-level onboarding before its data holders start saying yes to an app, and that step can be as manual as Beta likes. What matters is that the app experiences it once per network, not once per endpoint.
+More registrations than Alpha — but every one is a machine-to-machine call a library performs in a loop. Per-data-holder *work*, zero per-data-holder *manual steps*. The network is not absent: Beta runs its own onboarding before its data holders start saying yes to an app, and that review can be as manual as Beta likes. Its data holders then consult Beta's approval signal automatically, under the hood. The app experiences the review once per network, not once per endpoint.
 
 ### 2c. Gamma — UDAP trust community
 
@@ -137,19 +143,19 @@ sequenceDiagram
     autonumber
     participant App as BP Buddy
     participant CA as Gamma trust-community CA
-    participant DH1 as Gamma data holder #1 auth server
-    participant DHn as Gamma data holder #N auth server
+    participant DH1 as Gamma data holder 1<br/>auth server
+    participant DHn as Gamma data holder N<br/>auth server
 
-    Note over App,CA: One-time per-network step
-    App->>CA: Certificate request (community vetting per Gamma policy,<br/>can lean on the same CMS Library evidence)
+    Note over App,CA: One-time per-network step — may be manual
+    App->>CA: Certificate request (community vetting per<br/>Gamma policy, possibly manual — can lean<br/>on the same CMS Library evidence)
     CA-->>App: X.509 certificate
     par automated, per data holder
         App->>DH1: UDAP dynamic registration<br/>(RFC 7591, software statement signed with X.509 key)
-        DH1->>DH1: Validate chain to community CA (anchor published in NPD)
-        DH1-->>App: client_id @ data holder #1
+        DH1->>DH1: Validate chain to community CA<br/>(anchor published in NPD)
+        DH1-->>App: client_id @ data holder 1
     and
         App->>DHn: UDAP dynamic registration
-        DHn-->>App: client_id @ data holder #N
+        DHn-->>App: client_id @ data holder N
     end
 ```
 
