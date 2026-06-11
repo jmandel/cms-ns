@@ -321,6 +321,10 @@ Throughout the walkthrough, BP Buddy never:
 - emailed a JWKS URL or touched a portal per data holder (Alpha's portal was one signup for the whole network);
 - paid a per-network access fee;
 - coordinated a key rotation by hand (every credential tracked its `jwks_uri` automatically);
+
 - repeated its vetting (the CMS Library review happened once and traveled as a signed artifact).
 
 A developer who doesn't want to do even this much can hand Phases 1–4 to a platform or an open-source library, or can skip connectivity entirely and receive Maria's data when she chooses to share it from an app that does connect.
+
+
+I wonder why, I wonder why, I wonder why, I wonder. That makes me think, I wonder why, I wonder why, I wonder.
