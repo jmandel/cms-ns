@@ -30,7 +30,7 @@
 
   <!-- Group: Maria decides (tiles stacked: no implied order) -->
   <g>
-    <text x="518" y="40" text-anchor="middle" font-size="12" font-style="italic" fill="#0f5132">Maria decides, informed by the map</text>
+    <text x="518" y="40" text-anchor="middle" font-size="12" font-style="italic" fill="#0f5132">Maria decides what to share, and from which sites</text>
     <rect x="416" y="52" width="204" height="296" rx="11" fill="none" stroke="#9db8aa" stroke-width="1.2" stroke-dasharray="7 5"/>
 
     <!-- Tile 3: grant captured -->
@@ -51,9 +51,9 @@
     <text x="513" y="248" text-anchor="middle" font-size="14" font-weight="600">Her records</text>
     <text x="513" y="266" text-anchor="middle" font-size="14" font-weight="600">are located</text>
     <rect x="442" y="280" width="152" height="18" rx="9" fill="#0f5132"/>
-    <text x="518" y="293" text-anchor="middle" font-size="10" fill="#fff">the service sees the map</text>
+    <text x="518" y="293" text-anchor="middle" font-size="10" fill="#fff">service sees the full list</text>
     <rect x="442" y="304" width="152" height="18" rx="9" fill="#fff" stroke="#9db8aa"/>
-    <text x="518" y="317" text-anchor="middle" font-size="10" fill="#3c5d4b">the app sees the map</text>
+    <text x="518" y="317" text-anchor="middle" font-size="10" fill="#3c5d4b">the app sees the full list</text>
   </g>
 
   <text x="647" y="174" text-anchor="middle" font-size="10.5" fill="#777">grant +</text>
@@ -69,7 +69,7 @@
     <text x="846" y="164.5" text-anchor="middle" fill="#fff" font-weight="700" font-size="12">3</text>
     <text x="769" y="172" text-anchor="middle" font-size="13.5" font-weight="600">Each data holder</text>
     <text x="769" y="189" text-anchor="middle" font-size="13.5" font-weight="600">issues its own token</text>
-    <text x="776" y="205" text-anchor="middle" font-size="10" fill="#555">verifies app · Maria · grant</text>
+    <text x="776" y="205" text-anchor="middle" font-size="10" fill="#555">checks the app, Maria, the grant</text>
     <rect x="700" y="214" width="60" height="18" rx="9" fill="#0f5132"/>
     <text x="730" y="227" text-anchor="middle" font-size="10" fill="#fff">ticket</text>
     <rect x="766" y="214" width="80" height="18" rx="9" fill="#fff" stroke="#9db8aa"/>
