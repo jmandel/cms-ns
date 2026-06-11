@@ -628,7 +628,7 @@ const countyTicket = await new SignJWT({
 
 writePage(
   "issuance-token-response",
-  "Core story — the authorization step's token response",
+  "The authorization step's token response",
   "What BP Buddy receives when Maria finishes the authorization step at the shared authorization service: a standard SMART token response extended with per-site permission tickets and endpoint hints. Maria chose two sites; sites she left out appear nowhere.",
   [
     httpMd(
@@ -652,13 +652,19 @@ writePage(
     ),
     jwtMd("Ticket 0 — scoped to Lakeside Clinic", permissionTicket),
     jwtMd("Ticket 1 — scoped to County Health", countyTicket),
-    "Redeeming a ticket at a data holder is shown in [permission-ticket](permission-ticket.md). Renewing expired tickets uses the refresh_token at the service, without re-running the authorization step.",
+    httpMd(
+      "Renewing tickets later: the refresh_token re-mints them without re-running the authorization step",
+      [`POST ${TICKET_ISSUER}/token HTTP/1.1`, "Content-Type: application/x-www-form-urlencoded"],
+      { grant_type: "refresh_token", refresh_token: "(value from the response above)", client_id: "sas-bp-buddy-3f81" },
+    ),
+    "The refresh response has the same shape as the original: a fresh smart_permission_ticket array for the same site selection, with new expirations.",
+    "If Maria instead chooses every site in the network (the alternative at choice point ②), the response carries one blanket ticket with no data_holder_filter and endpoint hints for every match: see [blanket-ticket](blanket-ticket.md). Redeeming a per-site ticket at a data holder is shown in [permission-ticket](permission-ticket.md).",
   ],
 );
 
 writePage(
   "permission-ticket",
-  "Core story — a signed permission ticket and its redemption",
+  "A signed permission ticket and its redemption",
   "The patient authorizes once at a shared authorization service via a SMART App Launch code flow; the token response carries per-site tickets like this one plus endpoint hints (see issuance-token-response). The app redeems the ticket at each data holder's token endpoint via RFC 8693; the data holder verifies the ticket, independently verifies the embedded identity evidence, matches the patient locally, and issues its own token with the matched id.",
   [
     [
@@ -679,11 +685,32 @@ writePage(
       },
     ),
     httpMd("Token response — the data holder's own token, with its matched patient id", ["HTTP/1.1 200 OK", "Content-Type: application/json"], {
-      access_token: opaque(),
+      access_token: "(bearer token used below)",
       token_type: "Bearer",
       expires_in: 3600,
       scope: "patient/Observation.rs",
       patient: "lakeside-449210",
+    }),
+    httpMd("FHIR query with that token", [
+      `GET ${LAKESIDE_FHIR}/Observation?patient=lakeside-449210&category=vital-signs&_count=1 HTTP/1.1`,
+      "Authorization: Bearer (token from above)",
+      "Accept: application/fhir+json",
+    ]),
+    httpMd("FHIR response", ["HTTP/1.1 200 OK", "Content-Type: application/fhir+json"], {
+      resourceType: "Bundle",
+      type: "searchset",
+      total: 1,
+      entry: [{ resource: {
+        resourceType: "Observation",
+        status: "final",
+        code: { coding: [{ system: "http://loinc.org", code: "85354-9", display: "Blood pressure panel" }] },
+        subject: { reference: "Patient/lakeside-449210" },
+        effectiveDateTime: "2026-06-02T14:10:00Z",
+        component: [
+          { code: { coding: [{ system: "http://loinc.org", code: "8480-6" }] }, valueQuantity: { value: 131, unit: "mmHg" } },
+          { code: { coding: [{ system: "http://loinc.org", code: "8462-4" }] }, valueQuantity: { value: 82, unit: "mmHg" } },
+        ],
+      }}],
     }),
   ],
 );
@@ -789,6 +816,124 @@ writePage(
 );
 
 // =====================================================================
+// Pages for the record-location-and-data-access write-up
+// =====================================================================
+const SAS_CSP_CLIENT = "https://issuer.beta-exchange.example"; // the service's identity at the CSP
+
+writePage(
+  "csp-sign-in",
+  "The app signs Maria in at the CSP",
+  "BP Buddy is the CSP's relying party, exactly as today. The id_token it receives carries the app's canonical Library identifier as its audience, which is what lets any later verifier resolve the token to this app.",
+  [
+    httpMd("Authorize request (browser redirect to the CSP)", [
+      `GET ${CSP_ISS}/authorize?response_type=code HTTP/1.1`,
+      "  &client_id=" + encodeURIComponent(CMS_APP_ID),
+      "  &redirect_uri=https://bpbuddy.example/csp/callback",
+      "  &scope=openid+profile",
+      "  &state=af0X9 &nonce=n-7qL2",
+    ]),
+    httpMd("Token response after the code exchange", ["HTTP/1.1 200 OK", "Content-Type: application/json"], {
+      access_token: opaque(),
+      token_type: "Bearer",
+      expires_in: 300,
+      id_token: `${idToken.slice(0, 50)}... (decoded below)`,
+    }),
+    jwtMd("id_token: aud is the app's Library software_id", idToken),
+  ],
+);
+
+writePage(
+  "authorization-step",
+  "Opening the authorization step",
+  "The app opens a standard SMART App Launch code flow at the shared authorization service, passing Maria's id_token as a hint. The service then re-authenticates her silently at the CSP and receives a fresh id_token audienced to itself.",
+  [
+    httpMd("The app's authorize request at the service (browser redirect)", [
+      `GET ${TICKET_ISSUER}/authorize?response_type=code HTTP/1.1`,
+      "  &client_id=sas-bp-buddy-3f81",
+      "  &redirect_uri=https://bpbuddy.example/callback",
+      "  &scope=permission_ticket+patient%2FObservation.rs+offline_access",
+      "  &code_challenge=E9Mt... &code_challenge_method=S256 &state=x7Hq",
+      `  &id_token_hint=${idToken.slice(0, 40)}...`,
+    ]),
+    httpMd("The service's silent re-authentication at the CSP (no screen if Maria's CSP session is live)", [
+      `GET ${CSP_ISS}/authorize?response_type=code&prompt=none HTTP/1.1`,
+      "  &client_id=" + encodeURIComponent(SAS_CSP_CLIENT),
+      "  &redirect_uri=https://issuer.beta-exchange.example/csp/callback",
+      "  &scope=openid",
+      `  &id_token_hint=${idToken.slice(0, 40)}...`,
+    ]),
+    jwtMd("Fresh id_token from the silent re-auth: same person, new auth event, aud is now the service", ticketEvidence),
+    "The lighter option skips the silent re-auth: the service accepts the app-passed id_token itself as the sign-in. That token is verifiable and audience-bound to the app, and it proves the app holds a recent assertion about Maria, not that Maria is present in this browser.",
+  ],
+);
+
+const blanketTicket = await new SignJWT({
+  ticket_type: "patient-self-access-v1",
+  subject: {
+    patient: { name: [{ family: "Lopez", given: ["Maria"] }], birthDate: "1962-03-15" },
+  },
+  subject_identity_evidence: ticketEvidence,
+  presenter_binding: { jkt: appKeyA.jwk.kid },
+  access: {
+    permissions: [{ resource_type: "Observation", interactions: ["read", "search"] }],
+  },
+})
+  .setProtectedHeader({ alg: "ES256", kid: ticketIssuerKey.jwk.kid, typ: "JWT" })
+  .setIssuer(TICKET_ISSUER)
+  .setAudience("https://beta-exchange.example/data-holders")
+  .setIssuedAt(now)
+  .setExpirationTime(now + 3600)
+  .setJti(uuid())
+  .sign(ticketIssuerKey.privateKey);
+
+writePage(
+  "peer-record-location",
+  "The service looks up record locations",
+  "Within its own network the lookup is internal. For peer networks it has agreements with, the service queries their record location endpoints system-to-system. The wire shape is a placeholder; what matters is that the service, not the app, sees the answers.",
+  [
+    httpMd(
+      "Request to a peer network's record location endpoint",
+      ["POST https://rls.gamma-trust.example/fhir/Patient/$rls HTTP/1.1", "Authorization: Bearer (service credentials under the peering agreement)", "Content-Type: application/fhir+json"],
+      {
+        resourceType: "Parameters",
+        parameter: [
+          { name: "demographics", part: [
+            { name: "family", valueString: "Lopez" },
+            { name: "given", valueString: "Maria" },
+            { name: "birthdate", valueDate: "1962-03-15" },
+          ]},
+        ],
+      },
+    ),
+    httpMd("Response", ["HTTP/1.1 200 OK", "Content-Type: application/fhir+json"], {
+      resourceType: "Parameters",
+      parameter: [
+        { name: "location", part: [
+          { name: "organization", valueString: "Riverbend Medical" },
+          { name: "fhir-endpoint", valueUrl: "https://fhir.riverbend.example/r4" },
+        ]},
+      ],
+    }),
+  ],
+);
+
+writePage(
+  "blanket-ticket",
+  "A blanket ticket: every match disclosed",
+  "If Maria chooses every site (or the deployment does in-app selection), the token response carries a single ticket with no data_holder_filter, and endpoint hints for every match. The app learns every care relationship; this is the disclosure that service-side selection avoids.",
+  [
+    jwtMd("Blanket ticket: no data_holder_filter", blanketTicket),
+    httpMd("Endpoint hints accompanying it: every match, all pointing at ticket 0", ["HTTP/1.1 200 OK (excerpt)"], {
+      smart_permission_ticket_endpoints: [
+        { fhir_base_url: LAKESIDE_FHIR, organization: { resourceType: "Organization", name: "Lakeside Clinic" }, ticket_indices: [0] },
+        { fhir_base_url: "https://fhir.countyhealth.example/r4", organization: { resourceType: "Organization", name: "County Health" }, ticket_indices: [0] },
+        { fhir_base_url: "https://fhir.generalhospital.example/r4", organization: { resourceType: "Organization", name: "General Hospital" }, ticket_indices: [0] },
+      ],
+    }),
+  ],
+);
+
+// =====================================================================
 // Keys and trust anchors
 // =====================================================================
 writePage(
@@ -809,28 +954,42 @@ writePage(
 // Index
 // =====================================================================
 {
-  const order = [
-    "phase0-software-statement",
-    "phase1-npd-discovery",
-    "phase2a-alpha-portal",
-    "phase2b-beta-dynreg",
-    "phase2c-gamma-udap",
-    "phase3-rls",
-    "phase4a-alpha-facilitated",
-    "phase4b-federated",
-    "issuance-token-response",
-    "permission-ticket",
-    "phase5-key-rotation",
-    "keys-and-trust-anchors",
+  const groups: Array<[string, string[]]> = [
+    ["Record location and data access ([authorizing-access.md](../authorizing-access.md))", [
+      "csp-sign-in",
+      "authorization-step",
+      "peer-record-location",
+      "issuance-token-response",
+      "permission-ticket",
+      "blanket-ticket",
+      "phase3-rls",
+      "phase4b-federated",
+      "phase5-key-rotation",
+    ]],
+    ["Registration and connectivity walkthrough ([app-connectivity-flows.md](../app-connectivity-flows.md))", [
+      "phase0-software-statement",
+      "phase1-npd-discovery",
+      "phase2a-alpha-portal",
+      "phase2b-beta-dynreg",
+      "phase2c-gamma-udap",
+      "phase3-rls",
+      "phase4a-alpha-facilitated",
+      "phase4b-federated",
+      "phase5-key-rotation",
+    ]],
   ];
   const byFile = new Map(pages.map((p) => [p.file, p.title]));
   const md = [
     "# Example artifacts",
     "",
-    "*Sample requests and responses for every step in [app-connectivity-flows.md](../app-connectivity-flows.md). All JWTs are really signed; each page shows the compact JWS next to its decoded header and payload. Verify anything against [keys-and-trust-anchors](keys-and-trust-anchors.md).*",
+    "*Sample requests and responses, one page per step. All JWTs are really signed; each page shows the compact JWS next to its decoded header and payload. Verify anything against [keys-and-trust-anchors](keys-and-trust-anchors.md).*",
     "",
-    ...order.map((f) => `- [${byFile.get(f)}](${f}.md)`),
-    "",
+    ...groups.flatMap(([title, files]) => [
+      `## ${title}`,
+      "",
+      ...files.map((f) => `- [${byFile.get(f)}](${f}.md)`),
+      "",
+    ]),
     `*Generated ${iso(now)} by [tools/artifact-generator](https://github.com/jmandel/cms-ns/tree/no-home-network/tools/artifact-generator).*`,
   ].join("\n");
   writeFileSync(join(OUT, "index.md"), md);

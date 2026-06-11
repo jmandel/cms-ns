@@ -36,9 +36,9 @@ Before a data holder releases anything, it has to know the app, know Maria at IA
 
 ![The app is known, Maria is known at IAL2, her grant is captured, her records are located, and each data holder issues its own token, with three marked choice points](authorizing-access-logical.svg)
 
-## The core story, step by step
+## The flow drawn above, step by step
 
-This is the flow drawn in the diagram. A shared authorization service sits between the app and the data holders:
+A shared authorization service captures the grant, and the app redeems per-site tickets at the data holders:
 
 ```mermaid
 sequenceDiagram
@@ -66,14 +66,14 @@ sequenceDiagram
 
 Walking it through:
 
-1. BP Buddy signs Maria in at her IAL2 CSP itself, exactly as it does today: the app is the CSP's relying party and bears the proofing relationship. (The proofing cost was paid once; later sign-ins against that identity are cheap federated authentications.)
-2. The app opens the authorization step at the shared authorization service (a standard SMART App Launch code flow with PKCE), already holding Maria's id_token, which it passes as a hint. The request also carries the app's Library-backed identity, so the service knows exactly which app is asking without any prior relationship.
+1. BP Buddy signs Maria in at her IAL2 CSP itself, exactly as it does today: the app is the CSP's relying party and bears the proofing relationship. (The proofing cost was paid once; later sign-ins against that identity are cheap federated authentications.) [Example](example-artifacts/csp-sign-in.md).
+2. The app opens the authorization step at the shared authorization service (a standard SMART App Launch code flow with PKCE), already holding Maria's id_token, which it passes as a hint. The request also carries the app's Library-backed identity, so the service knows exactly which app is asking without any prior relationship. [Example](example-artifacts/authorization-step.md).
 3. The service re-authenticates Maria silently against the CSP using the hint: no screen if her CSP session is live, no re-proofing ever, and the service receives a fresh id_token audienced to itself. (Whether ecosystem re-authentication is priced at zero is a CSP participation-terms question worth exploring, not an architecture question.)
-4. The service looks up where Maria has records: its own network's data holders, plus peer networks it has agreements with. The patient-facing screen is the right place for this lookup to live, because whoever presents the choices needs to know what the choices are.
+4. The service looks up where Maria has records: its own network's data holders, plus peer networks it has agreements with. The patient-facing screen is the right place for this lookup to live, because whoever presents the choices needs to know what the choices are. [Example](example-artifacts/peer-record-location.md).
 5. Maria sees the matches and narrows them: which sites, which data categories. Sites she leaves out are never disclosed to the app, either as hints or as tickets.
 6. The token response back to the app carries one signed permission ticket per chosen site plus endpoint hints ([SMART Permission Tickets, proposal 003](https://build.fhir.org/ig/jmandel/smart-permission-tickets-wip/proposal-003-smart-launch-issuance.html); [example response](example-artifacts/issuance-token-response.md)). Each ticket binds the grant: Maria's demographics, her identity evidence, the authorized scope, the site it is for, and the app's key.
 7. At each data holder, the app presents its key and that site's ticket (RFC 8693 token exchange). The data holder verifies the ticket signature, independently verifies the identity evidence inside it, runs its own patient match, applies its own policy, and issues its own access token with the matched patient id ([example ticket](example-artifacts/permission-ticket.md)).
-8. FHIR queries proceed with each data holder's token. A still-valid ticket can be re-presented for a fresh token; expired tickets are renewed at the service with a refresh token, without re-running the authorization step.
+8. FHIR queries proceed with each data holder's token. A still-valid ticket can be re-presented for a fresh token; expired tickets are renewed at the service with a refresh token, without re-running the authorization step ([example](example-artifacts/issuance-token-response.md)).
 
 There is no `$rls` call by the app anywhere in this story: record location happened inside the authorization step, and the app received its answer as tickets.
 
@@ -81,7 +81,7 @@ There is no `$rls` call by the app anywhere in this story: record location happe
 
 ## Choice point ①: where the grant is established
 
-The core story establishes the grant at the shared authorization service. The alternative is the flow CMS documents today, where the app attests the grant itself:
+The flow above establishes the grant at the shared authorization service. The alternative is the flow CMS documents for Blue Button, where the app attests the grant itself:
 
 ```mermaid
 sequenceDiagram
@@ -100,7 +100,7 @@ sequenceDiagram
 
 ## Choice point ②: where Maria narrows sites
 
-In the core story Maria narrows sites on the service's screen, before the app learns anything. The alternative sends the app everything and lets her narrow the list inside the app:
+In the flow above, Maria narrows sites on the service's screen, before the app learns anything. The alternative sends the app everything ([example](example-artifacts/blanket-ticket.md)) and lets her narrow the list inside the app:
 
 ```mermaid
 sequenceDiagram
@@ -118,7 +118,7 @@ Maria has the same control over what data flows either way. The difference is wh
 
 ## Choice point ③: what the app presents at each data holder
 
-In the core story the app presents a ticket. The alternative uses the same `cms_smart` call described under choice point ①:
+In the flow above the app presents a ticket. The alternative uses the same `cms_smart` call described under choice point ① ([example](example-artifacts/phase4b-federated.md)):
 
 ```mermaid
 sequenceDiagram
@@ -134,7 +134,7 @@ The data holder's verification work is nearly identical either way: client key a
 
 ## How Maria signs in (within ①)
 
-In the core story the app signed Maria in at the CSP and the service re-authenticates her silently with an `id_token_hint`, which yields a fresh, service-audienced assertion that the person in this browser is Maria. The lighter option skips the re-authentication: the service accepts the app-passed IAL2 id_token itself as the sign-in. That token is automatically verifiable and audience-bound to the app, and accepting it is the same trust model the `cms_smart` flow already runs on. It is an honest option provided it is named for what it is: it proves the app holds a recent assertion about Maria, not that Maria is present in this browser. A service accepting it should say so rather than implying a separation it does not deliver.
+In the flow above, the app signed Maria in at the CSP and the service re-authenticates her silently with an `id_token_hint`, which yields a fresh, service-audienced assertion that the person in this browser is Maria. The lighter option skips the re-authentication: the service accepts the app-passed IAL2 id_token itself as the sign-in. That token is automatically verifiable and audience-bound to the app, and accepting it is the same trust model the `cms_smart` flow already runs on. It is an honest option provided it is named for what it is: it proves the app holds a recent assertion about Maria, not that Maria is present in this browser. A service accepting it should say so rather than implying a separation it does not deliver.
 
 ---
 
@@ -142,16 +142,16 @@ In the core story the app signed Maria in at the CSP and the service re-authenti
 
 | | ① ② ③ | Who attests what Maria authorized | Who learns the full site list | Maria's steps | Data holder verifies |
 |---|---|---|---|---|---|
-| **Core story** | <span class="cp cp-b">1</span> <span class="cp cp-b">2</span> <span class="cp cp-b">3</span> | shared authorization service, in a signed ticket | the service only; the app learns chosen sites | one redirect: sign-in (often silent) + one screen | ticket + evidence + own match |
-| **Service step, `cms_smart` at data holders** | <span class="cp cp-b">1</span> <span class="cp cp-b">2</span> <span class="cp cp-o">3</span> | the service (recorded), app (presented) | the service only | same as core | `cms_smart` call, unchanged from today |
-| **In-app selection** | <span class="cp cp-b">1</span> <span class="cp cp-o">2</span> <span class="cp cp-b">3</span> | shared authorization service | the app | one redirect, selection in app | ticket + evidence + own match |
-| **Today's documented shape** | <span class="cp cp-o">1</span> <span class="cp cp-o">2</span> <span class="cp cp-o">3</span> | the app, backed by Library vetting | the app | none beyond CSP sign-in | `cms_smart` call |
+| **Service-captured grant, tickets at data holders** | <span class="cp cp-b">1</span> <span class="cp cp-b">2</span> <span class="cp cp-b">3</span> | shared authorization service, in a signed ticket | the service only; the app learns chosen sites | one redirect: sign-in (often silent) + one screen | ticket + evidence + own match |
+| **Service-captured grant, `cms_smart` at data holders** | <span class="cp cp-b">1</span> <span class="cp cp-b">2</span> <span class="cp cp-o">3</span> | the service (recorded), app (presented) | the service only | same as the first row | `cms_smart` call, unchanged |
+| **Service-captured grant, site selection in the app** | <span class="cp cp-b">1</span> <span class="cp cp-o">2</span> <span class="cp cp-b">3</span> | shared authorization service | the app | one redirect, selection in app | ticket + evidence + own match |
+| **App-asserted grant (`client_credentials` + `$rls`)** | <span class="cp cp-o">1</span> <span class="cp cp-o">2</span> <span class="cp cp-o">3</span> | the app, backed by Library vetting | the app | none beyond CSP sign-in | `cms_smart` call |
 
 One dependency: if the grant is app-asserted (①), then site narrowing happens in the app (②) and data holders see `cms_smart` (③), because without the authorization step there is no service screen and no tickets. The rest combine freely.
 
 ---
 
-## What the core story buys
+## What the authorization step adds
 
 - **Site-relationship privacy.** The existence of a care relationship is disclosed only as far as Maria chooses, which only service-side selection can deliver.
 - **Single-place revocation.** Maria revokes the grant where she made it, and the revocation reaches every credential derived from it, instead of hunting through per-app and per-portal switches.
@@ -164,4 +164,4 @@ The app's keys live at its `jwks_uri` and rotate there on the app's own schedule
 
 ---
 
-*Design context.* Several parties in the core story happen to be distinct: the CSP that proofs identity, the service that captures authorization, the app that receives data. That distinctness has consequences: the party attesting the grant has no financial stake in the data flowing. CMS's own position that a CSP should not learn sites of care leans the same way. But none of these flows mandates the separation, and the table's rightmost rows collapse the parties deliberately. The table is the honest accounting; deployments choose their row.
+*Design context.* When a shared authorization service is in the path, several parties are distinct: the CSP that proofs identity, the service that captures authorization, the app that receives data. That distinctness has consequences: the party attesting the grant has no financial stake in the data flowing. CMS's own position that a CSP should not learn sites of care leans the same way. But none of these flows mandates the separation, and the table's rightmost rows collapse the parties deliberately. The table is the honest accounting; deployments choose their row.

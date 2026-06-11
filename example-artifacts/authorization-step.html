@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>The authorization step's token response</title>
+<title>Opening the authorization step</title>
 <style>
   :root { --fg:#1a1a1a; --bg:#fff; --bg-code:#f4f4f5; --accent:#0f5132; --accent-soft:#e7f1ec; --rule:#e5e5e5; }
   * { box-sizing:border-box; }
@@ -43,7 +43,7 @@ const renderer = {
   }
 };
 marked.use({ renderer, mangle: false, headerIds: true });
-fetch('issuance-token-response.md').then(r => r.text()).then(md => {
+fetch('authorization-step.md').then(r => r.text()).then(md => {
   document.getElementById('content').innerHTML = marked.parse(md);
 });
 </script>
