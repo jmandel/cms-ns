@@ -15,7 +15,6 @@ The page shows one full flow, then three places where a deployment can do things
 | **IAL2 CSP** | CLEAR / ID.me. Proofed Maria once; later sign-ins against that identity are cheap federated authentications, not re-proofing. |
 | **CMS App Library** | Lists vetted patient-facing apps and publishes a signed software statement for each. The statement is the app's identity everywhere on this page. |
 | **The network** | A CMS-Aligned Network: its participating data holders plus a record location service. |
-| **Shared authorization service** | The party whose screen captures what Maria authorizes. Trusted by a network, though not necessarily operated by one: it may be a network's own service, a portal vendor, or another party the network's data holders recognize. It can run record location lookups against its own network and against peer networks it has agreements with. |
 | **Data holders** | Each runs its own authorization server and FHIR endpoint, and issues its own access tokens. |
 
 ---
@@ -115,7 +114,7 @@ Before a data holder releases anything, it has to know the app, know Maria at IA
 
 ## The flow drawn above, step by step
 
-A shared authorization service captures the grant, and the app redeems per-site tickets at the data holders:
+In this flow, a shared authorization service captures the grant: a party trusted by the network to do so, though not necessarily operated by it. It may be the network's own service, a portal vendor, or another party the network's data holders recognize, and it can run record location lookups against its own network and against peer networks it has agreements with. The app then redeems per-site tickets at the data holders:
 
 ```mermaid
 sequenceDiagram
