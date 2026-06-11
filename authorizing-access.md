@@ -2,7 +2,7 @@
 
 *Companion to [app-connectivity-flows.md](app-connectivity-flows.md), which covers registration and connectivity end to end using the CMS-documented `cms_smart` token shape. This page answers the narrower question the working group asked: how does a patient's authorization get established, and how does it reach the record locator service and each data holder? Every path below satisfies the same token-step contract stated in that walkthrough's Conventions — the data holder ends up knowing the client and its key, the patient at IAL2, and what the patient authorized, and it returns its own access token plus the matched patient id. What varies is how those facts arrive.*
 
-The page shows one full story, then the three places it can be assembled differently. None of the assemblies requires a home network, and all of them keep token issuance at the data holder.
+The page shows one full flow, then three places where a deployment can do things differently. No version requires a home network, and every version keeps token issuance at the data holder.
 
 ---
 
@@ -18,15 +18,15 @@ The page shows one full story, then the three places it can be assembled differe
 
 ---
 
-## The shape of every assembly
+## What has to happen
 
-Five facts must become true before data flows, in whatever order and by whatever parties a deployment chooses. Three of them can be established more than one way:
+Before a data holder releases anything, it has to know the app, know Maria at IAL2, and know what she authorized — and someone has to work out where her records are. The numbered circles mark the three places where there is more than one reasonable way to do this:
 
-![Five facts: app known, Maria known at IAL2, grant captured, records located, each data holder issues its own token — with choice points on the last three](authorizing-access-logical.svg)
+![The app is known, Maria is known at IAL2, her grant is captured, her records are located, and each data holder issues its own token, with three marked choice points](authorizing-access-logical.svg)
 
-## The core story, mechanically
+## The core story, step by step
 
-One instantiation — the filled chips above, with a shared authorization service in the path:
+This is the blue path through the diagram. A shared authorization service sits between the app and the data holders:
 
 ```mermaid
 sequenceDiagram
@@ -69,7 +69,7 @@ There is no `$rls` call by the app anywhere in this story: record location happe
 
 ## Choice point ① — where the grant is established
 
-The core story establishes the grant at the shared authorization service. The other assembly is the CMS-documented shape, where the app attests the grant itself:
+The core story establishes the grant at the shared authorization service. The orange choice is the flow CMS documents today, where the app attests the grant itself:
 
 ```mermaid
 sequenceDiagram
@@ -88,7 +88,7 @@ Here "what Maria authorized" rests on the app's own assertion, backed by Library
 
 ## Choice point ② — where Maria narrows sites
 
-In the core story Maria narrows sites on the service's screen, before the app learns anything. The other assembly returns everything and lets her narrow inside the app:
+In the core story Maria narrows sites on the service's screen, before the app learns anything. The orange choice sends the app everything and lets her narrow the list inside the app:
 
 ```mermaid
 sequenceDiagram
@@ -102,11 +102,11 @@ sequenceDiagram
     Maria->>App: deselects sites in the app
 ```
 
-Both assemblies give Maria the same control over what data flows. They differ in what the app learns: in-app selection means the app has already seen every care relationship — the behavioral health clinic, the reproductive health clinic — before Maria chooses. No in-app control can undo that disclosure. Service-side selection is the only placement where "the app never learns I was ever there" is achievable.
+Maria has the same control over what data flows either way. The difference is what the app learns: with in-app selection the app has already seen every care relationship — the behavioral health clinic, the reproductive health clinic — before Maria chooses. No in-app control can undo that disclosure. Service-side selection is the only placement where "the app never learns I was ever there" is achievable.
 
 ## Choice point ③ — what the app presents at each data holder
 
-The core story redeems a ticket. The other assembly uses the same `cms_smart` call the walkthrough documents:
+In the core story the app presents a ticket. The orange choice uses the same `cms_smart` call the walkthrough documents:
 
 ```mermaid
 sequenceDiagram
@@ -122,20 +122,20 @@ The data holder's verification work is nearly identical either way — client ke
 
 ## How Maria signs in (within ①)
 
-In the core story the app signed Maria in at the CSP and the service re-authenticates her silently with an `id_token_hint`, which yields a fresh, service-audienced assertion that the person in this browser is Maria. The lighter assembly skips the re-authentication: the service accepts the app-passed IAL2 id_token itself as the sign-in. That token is automatically verifiable and audience-bound to the app, and accepting it is the same trust model the `cms_smart` flow already runs on — so it is an honest option, provided it is named for what it is: it proves the app holds a recent assertion about Maria, not that Maria is present in this browser. A service accepting it should say so rather than implying a separation it does not deliver.
+In the core story the app signed Maria in at the CSP and the service re-authenticates her silently with an `id_token_hint`, which yields a fresh, service-audienced assertion that the person in this browser is Maria. The lighter option skips the re-authentication: the service accepts the app-passed IAL2 id_token itself as the sign-in. That token is automatically verifiable and audience-bound to the app, and accepting it is the same trust model the `cms_smart` flow already runs on — so it is an honest option, provided it is named for what it is: it proves the app holds a recent assertion about Maria, not that Maria is present in this browser. A service accepting it should say so rather than implying a separation it does not deliver.
 
 ---
 
-## The assemblies side by side
+## The combinations side by side
 
 | | Who attests what Maria authorized | Who learns the full site list | Maria's steps | Data holder verifies |
 |---|---|---|---|---|
-| **Core story** (①②③ as shown) | shared authorization service, in a signed ticket | the service only; the app learns chosen sites | one redirect: sign-in (often silent) + one screen | ticket + evidence + own match |
-| **Service step, `cms_smart` at data holders** (①② shown, ③ alternative) | the service (recorded), app (presented) | the service only | same as core | `cms_smart` call, unchanged from today |
-| **In-app selection** (①③ shown, ② alternative) | shared authorization service | the app | one redirect, selection in app | ticket + evidence + own match |
-| **Today's documented shape** (all alternatives) | the app, backed by Library vetting | the app | none beyond CSP sign-in | `cms_smart` call |
+| **Core story** (all blue) | shared authorization service, in a signed ticket | the service only; the app learns chosen sites | one redirect: sign-in (often silent) + one screen | ticket + evidence + own match |
+| **Service step, `cms_smart` at data holders** (blue ①②, orange ③) | the service (recorded), app (presented) | the service only | same as core | `cms_smart` call, unchanged from today |
+| **In-app selection** (blue ①③, orange ②) | shared authorization service | the app | one redirect, selection in app | ticket + evidence + own match |
+| **Today's documented shape** (all orange) | the app, backed by Library vetting | the app | none beyond CSP sign-in | `cms_smart` call |
 
-One dependency runs through the table: choosing the ① alternative forces the ② and ③ alternatives, because without the authorization step there is no service screen and no tickets. Everything else composes freely.
+One dependency: orange at ① forces orange at ② and ③, because without the authorization step there is no service screen and no tickets. The rest combine freely.
 
 ---
 
