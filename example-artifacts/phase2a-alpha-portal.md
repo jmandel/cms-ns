@@ -17,7 +17,7 @@ One way Alpha can verify key possession during signup is a short-lived JWT the d
 **key-possession proof** (compact JWS, really signed):
 
 ```
-eyJhbGciOiJSUzM4NCIsImtpZCI6IjQxeHM3YThWV2hIWlFRbXdZOVJrMFJuR0tqQjdJd3kwQ3B4LVZTVkRTSWsiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2xpYnJhcnkubWVkaWNhcmUuZ292L2FwcC1saWJyYXJ5L2FwcHMvYnAtYnVkZHkiLCJzdWIiOiJodHRwczovL2xpYnJhcnkubWVkaWNhcmUuZ292L2FwcC1saWJyYXJ5L2FwcHMvYnAtYnVkZHkiLCJhdWQiOiJodHRwczovL2RldmVsb3BlcnMuYWxwaGEtaGVhbHRoLmV4YW1wbGUiLCJpYXQiOjE3ODEyMTQzMDQsImV4cCI6MTc4MTIxNDYwNCwianRpIjoiOGQxZTMwMWYtNmU4Yi00YmRjLThhM2QtOGE1YThkMmQyNDIxIn0.gmSB6PE8yZbZXkPBUpTd2LLLRlbNeOwZUCcy2tl8hWQETT2DeVzyH-a_mwclCIuu0uuxOIj3bzNDp4hAkPtSSEa0hxyWoplWKoLzVnrSHgfMU8MGYbdq-Mk3ZbM9T3Mg-bo0Fk7JqNAnmd02GIHX4EgaHz16AcG1yZzFum8_lGTRhNinCiGGdkxX4FRaW9npNln3S86jPgi42XoROxLQgVryPNhfVZHJmcr8Arw1FdAEezyxKy6n7dxY-bBzGPDXS5dkSJ4zGsxGdROSbbHSTV7fa26uHq75j0P9D_AB8clqNV9oxP0nqOUVY2GSF-BP6ytjPE20W2fWOY89SyL_sw
+eyJhbGciOiJSUzM4NCIsImtpZCI6IkJBVEZ6V0tYSmJBWVM4el84Z0dPeHpTY2FaYlhiZWpxbU5GSlZMMWVnMUEiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2xpYnJhcnkubWVkaWNhcmUuZ292L2FwcC1saWJyYXJ5L2FwcHMvYnAtYnVkZHkiLCJzdWIiOiJodHRwczovL2xpYnJhcnkubWVkaWNhcmUuZ292L2FwcC1saWJyYXJ5L2FwcHMvYnAtYnVkZHkiLCJhdWQiOiJodHRwczovL2RldmVsb3BlcnMuYWxwaGEtaGVhbHRoLmV4YW1wbGUiLCJpYXQiOjE3ODEyMTY0NjYsImV4cCI6MTc4MTIxNjc2NiwianRpIjoiYTBhM2JiZDEtMDdhZC00Yzg1LTlkMDUtMWNlOTljZjExYzM1In0.nSXxMTgpoDzAOoWJV7xzlCJxFbIhJChjFw_ZzXS2Bi114CDR33dTbRGccqvblJx5lyvhUg2sn4KMVSAbpLNoaw2fFlPXf5ShEYT4tISWCXCWSZLwNZBTec5fZN6HC_AloXZxrxq2O95NVebzwKHuqkkNTIsHDM8a0ljUli8FjmQaQmp-EmR4UN-0TelRhJy5LFydzdTn-y_QCoY6-ee4twk0MAl7s4ICAiZ3Q2UNeC4aye3e-ALNCCVMQIf4FhowAvTN5aH8_5xivUWOCgax2ACWCQ5weWo3WSY1kbXSSESPMeoaK_rIV4apjQtsLNv11vUNGNryL_jDn10zWwUPQg
 ```
 
 Decoded header:
@@ -25,7 +25,7 @@ Decoded header:
 ```json
 {
   "alg": "RS384",
-  "kid": "41xs7a8VWhHZQQmwY9Rk0RnGKjB7Iwy0Cpx-VSVDSIk",
+  "kid": "BATFzWKXJbAYS8z_8gGOxzScaZbXbejqmNFJVL1eg1A",
   "typ": "JWT"
 }
 ```
@@ -37,9 +37,9 @@ Decoded payload:
   "iss": "https://library.medicare.gov/app-library/apps/bp-buddy",
   "sub": "https://library.medicare.gov/app-library/apps/bp-buddy",
   "aud": "https://developers.alpha-health.example",
-  "iat": 1781214304,
-  "exp": 1781214604,
-  "jti": "8d1e301f-6e8b-4bdc-8a3d-8a5a8d2d2421"
+  "iat": 1781216466,
+  "exp": 1781216766,
+  "jti": "a0a3bbd1-07ad-4c85-9d05-1ce99cf11c35"
 }
 ```
 
@@ -63,4 +63,4 @@ Content-Type: application/json
 }
 ```
 
-*Generated 2026-06-11T21:45:04.000Z by [tools/artifact-generator](https://github.com/jmandel/cms-ns/tree/no-home-network/tools/artifact-generator). Keys are throwaway examples; every signature verifies against the keys in [keys-and-trust-anchors](keys-and-trust-anchors.md).*
+*Generated 2026-06-11T22:21:06.000Z by [tools/artifact-generator](https://github.com/jmandel/cms-ns/tree/no-home-network/tools/artifact-generator). Keys are throwaway examples; every signature verifies against the keys in [keys-and-trust-anchors](keys-and-trust-anchors.md).*

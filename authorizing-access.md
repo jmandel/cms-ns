@@ -1,4 +1,4 @@
-# How a Patient's Authorization Reaches the RLS and Data Holders
+# How Patient Apps Use a CMS-Aligned Network for Record Location and Data Access
 
 *Companion to [app-connectivity-flows.md](app-connectivity-flows.md), which covers registration and connectivity end to end using the CMS-documented `cms_smart` token shape. This page answers the narrower question the working group asked: how does a patient's authorization get established, and how does it reach the record locator service and each data holder? Every path below satisfies the same token-step contract stated in that walkthrough's Conventions: the data holder ends up knowing the client and its key, the patient at IAL2, and what the patient authorized, and it returns its own access token plus the matched patient id. What varies is how those facts arrive.*
 
