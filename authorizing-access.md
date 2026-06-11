@@ -33,7 +33,7 @@ The app finds each network, its registration method, and its endpoints in the Na
 
 Three patterns cover the methods networks are likely to document. They are examples rather than a closed list: a network can document something else, so long as it operates uniformly across its data holders and keeps manual steps per network only.
 
-### Through a developer portal
+### Once per network, through a developer portal
 
 A human registers once for the whole network. The portal pre-fills its form from the CMS statement and verifies one signature instead of re-vetting the app; what its ad-hoc verification looks like is the network's business, and the spec should leave it unspecified. A network can also run this pattern with a different front door, forwarding dynamic registration requests from any of its data holders to the central registry and syncing the resulting client out to the rest. [Example](example-artifacts/phase2a-alpha-portal.md).
 
@@ -56,7 +56,7 @@ sequenceDiagram
     NAS-->>Dev: client_id (recognized at all participating data holders)
 ```
 
-### By dynamic registration at each data holder
+### At each data holder, presenting the CMS software statement
 
 The app presents the CMS statement at each data holder's RFC 7591 registration endpoint, and a client library performs the calls in a loop, so the larger count costs nothing manual. The network may run its own onboarding first, with as much manual review as its policy requires, or skip that layer and let the CMS statement carry the decision; its data holders consult the approval signal automatically. The statement pins the app's display name and URIs under the CMS signature, which closes a gap seen in certificate schemes where any credentialed app can register under any name it likes. [Example](example-artifacts/phase2b-beta-dynreg.md).
 
@@ -68,22 +68,22 @@ sequenceDiagram
     participant Net as The network
     participant DH as Data holder<br/>auth servers
 
-    opt network-level onboarding, per network policy (may be manual, may be skipped)
+    opt network-level onboarding (may be manual, may be skipped)
         App->>Net: Request onboarding<br/>(link to CMS software statement)
         Net->>CMS: Fetch and verify the statement
         Net->>Net: Internal review per network policy<br/>(opaque to apps, possibly manual)
-        Net-->>DH: Approval signal to its data holders: app okayed
+        Net-->>DH: Approval signal: app okayed
     end
-    App->>CMS: GET the current software-statement.jwt
+    App->>CMS: GET software-statement.jwt
     CMS-->>App: software_statement
     loop for each data holder, automated
         App->>DH: POST /register (RFC 7591, software_statement)
-        DH->>DH: Verify CMS signature, library_status, key<br/>possession, network approval signal (if any)
+        Note over DH: verifies CMS signature, library_status,<br/>key possession, approval signal (if any)
         DH-->>App: client_id at that data holder
     end
 ```
 
-### Through a trust community
+### At each data holder, presenting a community-issued certificate
 
 The network's community CA issues the app a certificate, with vetting per the network's policy that can lean on the same CMS Library evidence, and UDAP dynamic registration proceeds at each data holder from there. Whoever mandates this flavor is responsible for providing or naming the CA; the network owns that cost and cannot externalize it onto apps or other networks. Issued certificates have to track the app's `jwks_uri` automatically (see Keys over time below). [Example](example-artifacts/phase2c-gamma-udap.md).
 
