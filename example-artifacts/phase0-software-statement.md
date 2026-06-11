@@ -16,7 +16,7 @@ Accept: application/jwt
 **software_statement** (compact JWS, really signed):
 
 ```
-eyJhbGciOiJFUzM4NCIsImtpZCI6ImpWTG9aZHBNWEw1aHdmOFBnU0xxYnlkUmRNWlh6VGJTOVgwSkRIdnNHVTAiLCJ0eXAiOiJKV1QifQ.eyJzb2Z0d2FyZV9pZCI6Imh0dHBzOi8vbGlicmFyeS5tZWRpY2FyZS5nb3YvYXBwLWxpYnJhcnkvYXBwcy9icC1idWRkeSIsImNsaWVudF9uYW1lIjoiQlAgQnVkZHkiLCJjbGllbnRfdXJpIjoiaHR0cHM6Ly9icGJ1ZGR5LmV4YW1wbGUiLCJwb2xpY3lfdXJpIjoiaHR0cHM6Ly9icGJ1ZGR5LmV4YW1wbGUvcHJpdmFjeSIsImNvbnRhY3RzIjpbInN1cHBvcnRAYnBidWRkeS5leGFtcGxlIl0sImdyYW50X3R5cGVzIjpbImNsaWVudF9jcmVkZW50aWFscyJdLCJ0b2tlbl9lbmRwb2ludF9hdXRoX21ldGhvZCI6InByaXZhdGVfa2V5X2p3dCIsImp3a3NfdXJpIjoiaHR0cHM6Ly9icGJ1ZGR5LmV4YW1wbGUvLndlbGwta25vd24vandrcy5qc29uIiwiZXh0ZW5zaW9ucyI6eyJjbXNfYXBwIjp7InZlcnNpb24iOiIxIiwibGlicmFyeV9zdGF0dXMiOiJhY3RpdmUiLCJhcHBfY2xhc3MiOiJwYXRpZW50LWFjY2Vzcy1hcHAifX0sImlzcyI6Imh0dHBzOi8vbGlicmFyeS5tZWRpY2FyZS5nb3YiLCJzdWIiOiJodHRwczovL2xpYnJhcnkubWVkaWNhcmUuZ292L2FwcC1saWJyYXJ5L2FwcHMvYnAtYnVkZHkiLCJhdWQiOiJodHRwczovL2ZyYW1ld29yay5jbXMuZ292L2FsaWduZWQtbmV0d29ya3MiLCJpYXQiOjE3ODEyMDU0NTQsImV4cCI6MTc4MTI5MTg1NCwianRpIjoiZjliNzMyMmYtNzdjNy00Y2YxLWJmMzgtNjA1YjFjMTgxMmVhIn0.pEg9zf_FsgE10S5p0SWFDfE4D-b3noMkRfmK19VMNhnqeLtKL5o7dcxu0U3AKdYBzf2DiyecCXksaV2ohnFl8Pt6Oz8AtCfvui8Nbq6Dc-sCEMHB2woWEJBYm6iD3fln
+eyJhbGciOiJFUzM4NCIsImtpZCI6ImVoMVdWZmJjY0VSY3hfaGoxVWItaDJVLVRkc1o3Rmc5OTgtSlN1QW53T0kiLCJ0eXAiOiJKV1QifQ.eyJzb2Z0d2FyZV9pZCI6Imh0dHBzOi8vbGlicmFyeS5tZWRpY2FyZS5nb3YvYXBwLWxpYnJhcnkvYXBwcy9icC1idWRkeSIsImNsaWVudF9uYW1lIjoiQlAgQnVkZHkiLCJjbGllbnRfdXJpIjoiaHR0cHM6Ly9icGJ1ZGR5LmV4YW1wbGUiLCJwb2xpY3lfdXJpIjoiaHR0cHM6Ly9icGJ1ZGR5LmV4YW1wbGUvcHJpdmFjeSIsImNvbnRhY3RzIjpbInN1cHBvcnRAYnBidWRkeS5leGFtcGxlIl0sImdyYW50X3R5cGVzIjpbImNsaWVudF9jcmVkZW50aWFscyJdLCJ0b2tlbl9lbmRwb2ludF9hdXRoX21ldGhvZCI6InByaXZhdGVfa2V5X2p3dCIsImp3a3NfdXJpIjoiaHR0cHM6Ly9icGJ1ZGR5LmV4YW1wbGUvLndlbGwta25vd24vandrcy5qc29uIiwiZXh0ZW5zaW9ucyI6eyJjbXNfYXBwIjp7InZlcnNpb24iOiIxIiwibGlicmFyeV9zdGF0dXMiOiJhY3RpdmUiLCJhcHBfY2xhc3MiOiJwYXRpZW50LWFjY2Vzcy1hcHAifX0sImlzcyI6Imh0dHBzOi8vbGlicmFyeS5tZWRpY2FyZS5nb3YiLCJzdWIiOiJodHRwczovL2xpYnJhcnkubWVkaWNhcmUuZ292L2FwcC1saWJyYXJ5L2FwcHMvYnAtYnVkZHkiLCJhdWQiOiJodHRwczovL2ZyYW1ld29yay5jbXMuZ292L2FsaWduZWQtbmV0d29ya3MiLCJpYXQiOjE3ODEyMTQzMDQsImV4cCI6MTc4MTMwMDcwNCwianRpIjoiY2E1Y2U0YTUtMjIxZi00MjY4LThjZWYtMzFlMGI5ODFmZjBhIn0.78b5ozMQrebWmf_-ZGLNX57kbtJde9fYccUct2fLh4V7z0Tg7EH1RNmDBL9zdYdMGkMuNKu3KEzFmySjTCDuRH3iuMHOrfcCVw4ZJCGNM7tW0rSiGG6qPztW2IZxkNzC
 ```
 
 Decoded header:
@@ -24,7 +24,7 @@ Decoded header:
 ```json
 {
   "alg": "ES384",
-  "kid": "jVLoZdpMXL5hwf8PgSLqbydRdMZXzTbS9X0JDHvsGU0",
+  "kid": "eh1WVfbccERcx_hj1Ub-h2U-TdsZ7Fg998-JSuAnwOI",
   "typ": "JWT"
 }
 ```
@@ -55,9 +55,9 @@ Decoded payload:
   "iss": "https://library.medicare.gov",
   "sub": "https://library.medicare.gov/app-library/apps/bp-buddy",
   "aud": "https://framework.cms.gov/aligned-networks",
-  "iat": 1781205454,
-  "exp": 1781291854,
-  "jti": "f9b7322f-77c7-4cf1-bf38-605b1c1812ea"
+  "iat": 1781214304,
+  "exp": 1781300704,
+  "jti": "ca5ce4a5-221f-4268-8cef-31e0b981ff0a"
 }
 ```
 
@@ -71,13 +71,13 @@ Decoded payload:
     {
       "e": "AQAB",
       "kty": "RSA",
-      "n": "yoBp4oUM3ySKjUd4DObu8C9knnPDWuOE1i6tE2BfBxH8GbDLBvCEHEf--tk--oZXobQPAN7TsG3-kAtuhM5lZN5WrhkjMPrnkWhl9-PTUgHPBUw-ltxSTt6HZu5kJF2EP_tyWVyQL4qvMOpjG069Xs2nCLXDjSJrIeqvj7dRrsJ6JXDo1M666wjFw-W1xEKuM9Ev4JBaaN6hAoNTFaOuz1BZMnjn2lsjU2yqGegnTDEc_V2dAVSo8UXaE0rSyN4JwPikTi_r4ai0RfSa9fHydO8luRM1QH_bRAywvC1HtjN_oi4T8V93ohw_DHJ4j-Nx9R7zRct4MuOUYLqIkGQs1Q",
+      "n": "wD4dFhN6vSo-2eX8UKjC_rnuXHsO2v2Ex57AVLxCkErGKv9JZvKooZ6HxRYQ0sDRTFPyjPN38N-H82RVBO4TUjbMbIqfD_Rab7vsWaTYpegCG_Um5Ca_kyS4CTtKSGyT4DhMswYhQi1MIlFC6z8VeXxjVpUvnOJdtPaez2CK9JfRxtxA4jEG-gP0TQnX6cyGLZUz5VxplwFMQpodAE2W0gHQQL5te6_aSED6YFrOYMx4ma0rGyL5hYgSIDlmnOZuyY4i4rLJZLSHj7K-AgF3f3bz70wOek5C6BzzvecP2Q9IxN4I8Zhr960UulroRd-tY6tngkkf7_9Vits8gElEbQ",
       "alg": "RS384",
       "use": "sig",
-      "kid": "1eYmvBkQ_oUUGVy857AFYHvSETlQYMAyOXj1TgXBRrs"
+      "kid": "41xs7a8VWhHZQQmwY9Rk0RnGKjB7Iwy0Cpx-VSVDSIk"
     }
   ]
 }
 ```
 
-*Generated 2026-06-11T19:17:34.000Z by [tools/artifact-generator](https://github.com/jmandel/cms-ns/tree/no-home-network/tools/artifact-generator). Keys are throwaway examples; every signature verifies against the keys in [keys-and-trust-anchors](keys-and-trust-anchors.md).*
+*Generated 2026-06-11T21:45:04.000Z by [tools/artifact-generator](https://github.com/jmandel/cms-ns/tree/no-home-network/tools/artifact-generator). Keys are throwaway examples; every signature verifies against the keys in [keys-and-trust-anchors](keys-and-trust-anchors.md).*

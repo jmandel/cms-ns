@@ -153,6 +153,7 @@ function htmlWrapper(title: string, source: string): string {
     <a href="../index.html">CAN Spec</a> ·
     <a href="../apps-without-home-networks.html">Apps Without Home Networks</a> ·
     <a href="../app-connectivity-flows.html">Connectivity Flows</a> ·
+    <a href="../authorizing-access.html">Authorizing Access</a> ·
     <a href="index.html">Artifacts</a>
   </nav>
   <div id="content"><p>Loading…</p></div>
@@ -605,10 +606,60 @@ const permissionTicket = await new SignJWT({
   .setJti(uuid())
   .sign(ticketIssuerKey.privateKey);
 
+const countyTicket = await new SignJWT({
+  ticket_type: "patient-self-access-v1",
+  subject: {
+    patient: { name: [{ family: "Lopez", given: ["Maria"] }], birthDate: "1962-03-15" },
+  },
+  subject_identity_evidence: ticketEvidence,
+  presenter_binding: { jkt: appKeyA.jwk.kid },
+  access: {
+    permissions: [{ resource_type: "Observation", interactions: ["read", "search"] }],
+    data_holder_filter: [{ organization: "County Health" }],
+  },
+})
+  .setProtectedHeader({ alg: "ES256", kid: ticketIssuerKey.jwk.kid, typ: "JWT" })
+  .setIssuer(TICKET_ISSUER)
+  .setAudience("https://fhir.countyhealth.example/r4")
+  .setIssuedAt(now)
+  .setExpirationTime(now + 3600)
+  .setJti(uuid())
+  .sign(ticketIssuerKey.privateKey);
+
 writePage(
-  "permission-ticket-alternative",
-  "Alternative shape — a signed permission ticket",
-  "In the SMART Permission Tickets model (proposal 003), the patient authorizes once at an issuer via a SMART App Launch code flow; the token response carries tickets like this one plus endpoint hints. The app redeems the ticket at each data holder's token endpoint via RFC 8693; the data holder verifies the ticket, independently verifies the embedded identity evidence, matches the patient locally, and issues its own token with the matched id.",
+  "issuance-token-response",
+  "Core story — the authorization step's token response",
+  "What BP Buddy receives when Maria finishes the authorization step at the shared authorization service: a standard SMART token response extended with per-site permission tickets and endpoint hints. Maria chose two sites; sites she left out appear nowhere.",
+  [
+    httpMd(
+      "Token response — authorization code exchanged at the service's token endpoint",
+      ["HTTP/1.1 200 OK", "Content-Type: application/json"],
+      {
+        access_token: opaque(),
+        token_type: "Bearer",
+        expires_in: 300,
+        refresh_token: opaque(),
+        scope: "permission_ticket patient/Observation.rs offline_access",
+        smart_permission_ticket: [
+          `${permissionTicket.slice(0, 50)}... (ticket 0, decoded below)`,
+          `${countyTicket.slice(0, 50)}... (ticket 1, decoded below)`,
+        ],
+        smart_permission_ticket_endpoints: [
+          { fhir_base_url: LAKESIDE_FHIR, organization: { resourceType: "Organization", name: "Lakeside Clinic" }, ticket_indices: [0] },
+          { fhir_base_url: "https://fhir.countyhealth.example/r4", organization: { resourceType: "Organization", name: "County Health" }, ticket_indices: [1] },
+        ],
+      },
+    ),
+    jwtMd("Ticket 0 — scoped to Lakeside Clinic", permissionTicket),
+    jwtMd("Ticket 1 — scoped to County Health", countyTicket),
+    "Redeeming a ticket at a data holder is shown in [permission-ticket](permission-ticket.md). Renewing expired tickets uses the refresh_token at the service, without re-running the authorization step.",
+  ],
+);
+
+writePage(
+  "permission-ticket",
+  "Core story — a signed permission ticket and its redemption",
+  "The patient authorizes once at a shared authorization service via a SMART App Launch code flow; the token response carries per-site tickets like this one plus endpoint hints (see issuance-token-response). The app redeems the ticket at each data holder's token endpoint via RFC 8693; the data holder verifies the ticket, independently verifies the embedded identity evidence, matches the patient locally, and issues its own token with the matched id.",
   [
     [
       jwtMd("Permission ticket — note subject demographics, the embedded IAL2 id_token as subject_identity_evidence, and the presenter binding to the app's key", permissionTicket),
@@ -767,7 +818,8 @@ writePage(
     "phase3-rls",
     "phase4a-alpha-facilitated",
     "phase4b-federated",
-    "permission-ticket-alternative",
+    "issuance-token-response",
+    "permission-ticket",
     "phase5-key-rotation",
     "keys-and-trust-anchors",
   ];

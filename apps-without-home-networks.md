@@ -27,6 +27,8 @@ In the current draft, the home network is:
 
 All five functions are real; none of them requires a designated home network, and several are performed *worse* by one.
 
+A home network in the request path also carries a protocol cost the rest of the architecture would have to bear: every authorization server and data holder receiving a request made with or on behalf of an app must learn both identities — the network transporting the request and the app the patient actually chose, since the app is what patients recognize and what audit logs must show. Every trust surface in the ecosystem would need that dual-identity bookkeeping. Remove the intermediary and the bookkeeping disappears.
+
 ---
 
 ## CMS's rationale 1: "Someone needs to check the app's technical conformance and compliance"

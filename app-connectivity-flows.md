@@ -1,7 +1,7 @@
 # An App's Life Across CMS-Aligned Networks, Without a Home Network
 
 **Flow walkthrough with sequence diagrams**
-*Companion to [apps-without-home-networks.md](apps-without-home-networks.md). Shows that a patient-facing app, carrying only its CMS App Library credentials, can register with networks that work in three different ways, locate records, and retrieve data, with no home network and no manual per-data-holder steps. Nothing in these flows changes if a home network exists; none of the mechanics requires one.*
+*Companion to [apps-without-home-networks.md](apps-without-home-networks.md). Shows that a patient-facing app, carrying only its CMS App Library credentials, can register with networks that work in three different ways, locate records, and retrieve data, with no home network and no manual per-data-holder steps. Nothing in these flows changes if a home network exists; none of the mechanics requires one. If a deployment does put a home network in the request path, acting with or on behalf of an app, every authorization server and data holder receiving its requests must still learn both identities: the network making the call and the app the patient chose, since the app is what patients recognize and what audit logs must show (can-spec §12). These flows avoid that dual-identity bookkeeping by having no intermediary in the path.*
 
 > **Conventions**
 >
@@ -143,7 +143,7 @@ sequenceDiagram
 
 *Example artifacts: [the RFC 7591 request and response at a Beta data holder](example-artifacts/phase2b-beta-dynreg.md).*
 
-Each registration is a machine-to-machine call that a client library performs in a loop, so the larger count compared to Alpha costs nothing manual. The optional block is where Beta's own judgment lives: it may onboard apps before its data holders accept them, with as much manual review as its policy requires, or it may skip that layer and let the CMS statement carry the decision. Either way, its data holders act on the signal automatically, and the app sees at most one review per network.
+Each registration is a machine-to-machine call that a client library performs in a loop, so the larger count compared to Alpha costs nothing manual. The statement also pins the app's display name and URIs under the CMS signature, closing a gap seen in certificate-based schemes where any credentialed app can register under any name it likes. The optional block is where Beta's own judgment lives: it may onboard apps before its data holders accept them, with as much manual review as its policy requires, or it may skip that layer and let the CMS statement carry the decision. Either way, its data holders act on the signal automatically, and the app sees at most one review per network.
 
 ### 2c. Gamma — UDAP trust community
 
@@ -166,7 +166,7 @@ sequenceDiagram
 
 *Example artifacts: [the UDAP software statement with its x5c certificate chain](example-artifacts/phase2c-gamma-udap.md).*
 
-Gamma chose a CA-anchored trust path. The app does one custom per-network step (obtaining the certificate), and the per-data-holder layer is automated from there. This satisfies the invariant, and Gamma competes on whether the extra step is worth what its network offers.
+Gamma chose a CA-anchored trust path. The app does one custom per-network step (obtaining the certificate), and the per-data-holder layer is automated from there. This satisfies the invariant, and Gamma competes on whether the extra step is worth what its network offers. The cost discipline that makes the choice acceptable: whoever mandates UDAP is responsible for providing or naming the CA. A network that picks this flavor owns the certificate authority's operation and cannot externalize that cost onto apps or onto other networks.
 
 Gamma comes closest to working without a separate network-level review, but it would be a mistake to expect UDAP to resolve the underlying policy questions: who may join the trust community, on what terms, and what happens when an app misbehaves. Certificate issuance is itself Gamma's network-level review and can be as manual as its policy requires, and Gamma's data holders may still consult a network-level approval signal before honoring a registration, just as Beta's do.
 
@@ -214,7 +214,7 @@ Purpose of use (`PATRQT`) is declared at the token request and travels with ever
 
 **Why an operation rather than a payload?** A simpler placeholder would skip `$rls` entirely and return the record-location results inside the token response itself. That works, but an operation lets the app pass parameters (geographic distribution, recency or date-range hints, resource-type interests) and re-query under the same patient-bound token as its needs change, without repeating the identity flow.
 
-**An alternative binding: permission tickets.** The `$rls` shape above returns locations and leaves the app to run the identity ceremony again per site. An alternative under active exploration ([SMART Permission Tickets, proposal 003](https://build.fhir.org/ig/jmandel/smart-permission-tickets-wip/proposal-003-smart-launch-issuance.html)) folds these together: the patient authorizes once at an issuer through a standard SMART App Launch code flow, and the token response carries signed permission tickets plus endpoint hints. The app redeems a ticket at each data holder's token endpoint via RFC 8693 token exchange; the data holder verifies the ticket signature, independently verifies the identity evidence embedded in it, performs its own patient match, and returns its own access token along with the matched patient id, so no separate `$match` step exists. The issuance ceremony is also the natural place for the patient to choose which locations the app learns about at all: the issuer filters both the endpoint hints and the tickets' data-holder scope to the patient's selections. Either shape is a binding of the same token-step contract stated in the Conventions; this walkthrough illustrates the `cms_smart` binding and takes no position between them. See a [signed example ticket](example-artifacts/permission-ticket-alternative.md).
+**Permission tickets** offer another binding of the same contract: a shared authorization service captures Maria's authorization once, in a code flow, and returns per-site tickets the app redeems at each data holder, with no `$rls` call by the app at all. That full story, and the points where each approach can substitute for the other, is in [authorizing-access.md](authorizing-access.md).
 
 ---
 
