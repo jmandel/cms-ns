@@ -1,6 +1,6 @@
 # How Patient Apps Use a CMS-Aligned Network for Record Location and Data Access
 
-*Companion to [app-connectivity-flows.md](app-connectivity-flows.md), which covers registration and connectivity end to end using the CMS-documented `cms_smart` token shape. This page answers the narrower question the working group asked: how does a patient's authorization get established, and how does it reach the record locator service and each data holder? Every path below satisfies the same token-step contract stated in that walkthrough's Conventions: the data holder ends up knowing the client and its key, the patient at IAL2, and what the patient authorized, and it returns its own access token plus the matched patient id. What varies is how those facts arrive.*
+*This page shows how a patient-facing app, listed in the Medicare App Library, uses a CMS-Aligned Network to find where a patient's records are and to fetch them. Every flow on it ends the same way: each data holder, knowing the app and its key, knowing the patient at IAL2, and knowing what she authorized, issues its own access token with the matched patient id. What varies is how those facts reach the data holder.*
 
 The page shows one full flow, then three places where a deployment can do things differently. No version requires a home network, and every version keeps token issuance at the data holder.
 
@@ -10,11 +10,23 @@ The page shows one full flow, then three places where a deployment can do things
 
 | Actor | Role |
 |---|---|
-| **BP Buddy** | Patient-facing app from the [connectivity walkthrough](app-connectivity-flows.md), listed in the Medicare App Library, registered with the networks it uses. |
+| **BP Buddy** | Patient-facing app, listed in the Medicare App Library and registered with the networks it uses (see the prerequisites below). |
 | **Maria** | A patient with records at several organizations, identity-proofed once at an IAL2 CSP. |
 | **IAL2 CSP** | CLEAR / ID.me. Proofed Maria once; later sign-ins against that identity are cheap federated authentications, not re-proofing. |
+| **CMS App Library** | Lists vetted patient-facing apps and publishes a signed software statement for each. The statement is the app's identity everywhere on this page. |
+| **The network** | A CMS-Aligned Network: its participating data holders plus a record location service. |
 | **Shared authorization service** | The party whose screen captures what Maria authorizes. Trusted by a network, though not necessarily operated by one: it may be a network's own service, a portal vendor, or another party the network's data holders recognize. It can run record location lookups against its own network and against peer networks it has agreements with. |
 | **Data holders** | Each runs its own authorization server and FHIR endpoint, and issues its own access tokens. |
+
+---
+
+## Prerequisites: the app's credentials
+
+CMS publishes a signed software statement for every active Library app: a short-lived JWT naming the app, its URIs, and its `jwks_uri`, and asserting its Library status ([example](example-artifacts/phase0-software-statement.md)). The statement pins the app's display name under the CMS signature, and it binds the app's keys by URL rather than by value, so the app rotates keys at its own `jwks_uri` without anyone re-issuing anything.
+
+The app also registers with each network it uses, by whatever method that network documents: a developer portal, RFC 7591 dynamic registration presenting the CMS statement ([example](example-artifacts/phase2b-beta-dynreg.md)), or a certificate from the network's trust community. Any method works so long as it holds one line: manual steps are acceptable per network, never per data holder. Registration ends with the app holding a client_id that the network's data holders recognize, and with each of them able to resolve the app's keys from its `jwks_uri`. The full registration walkthrough, with all three methods drawn out, is in [app-connectivity-flows.md](app-connectivity-flows.md).
+
+Nothing on this page puts an intermediary between the app and the parties it talks to. If a deployment ever does, every receiver must learn both identities, the intermediary's and the app's, because the app is what patients recognize and what audit logs name.
 
 ---
 
@@ -26,7 +38,7 @@ Before a data holder releases anything, it has to know the app, know Maria at IA
 
 ## The core story, step by step
 
-This is the blue path through the diagram. A shared authorization service sits between the app and the data holders:
+This is the flow drawn in the diagram. A shared authorization service sits between the app and the data holders:
 
 ```mermaid
 sequenceDiagram
@@ -69,7 +81,7 @@ There is no `$rls` call by the app anywhere in this story: record location happe
 
 ## Choice point ①: where the grant is established
 
-The core story establishes the grant at the shared authorization service. The orange choice is the flow CMS documents today, where the app attests the grant itself:
+The core story establishes the grant at the shared authorization service. The alternative is the flow CMS documents today, where the app attests the grant itself:
 
 ```mermaid
 sequenceDiagram
@@ -84,11 +96,11 @@ sequenceDiagram
     RLS-->>App: locations holding Maria's records
 ```
 
-Here "what Maria authorized" rests on the app's own assertion, backed by Library vetting, and Maria never leaves the app. This is the shape worked through end to end in the [connectivity walkthrough](app-connectivity-flows.md), and it is the floor the ecosystem already documents. Choosing it constrains the other two choice points: with no authorization step there is no service-side screen (② moves into the app) and no tickets (③ becomes `cms_smart`).
+`cms_smart` is the extension CMS documents for [Blue Button's CMS Aligned Networks flow](https://bluebutton.cms.gov/cms-aligned-networks-documentation/): a `client_credentials` grant whose signed `client_assertion` carries a `purpose_of_use` (`PATRQT` for patient access) and the patient's IAL2 id_token ([example](example-artifacts/phase3-rls.md)). `$rls` stands in for a record location operation whose wire shape is still an open question. Here "what Maria authorized" rests on the app's own assertion, backed by Library vetting, and Maria never leaves the app. This is the shape worked through end to end in the [connectivity walkthrough](app-connectivity-flows.md), and it is the floor the ecosystem already documents. Choosing it constrains the other two choice points: with no authorization step there is no service-side screen (② moves into the app) and no tickets (③ becomes `cms_smart`).
 
 ## Choice point ②: where Maria narrows sites
 
-In the core story Maria narrows sites on the service's screen, before the app learns anything. The orange choice sends the app everything and lets her narrow the list inside the app:
+In the core story Maria narrows sites on the service's screen, before the app learns anything. The alternative sends the app everything and lets her narrow the list inside the app:
 
 ```mermaid
 sequenceDiagram
@@ -106,7 +118,7 @@ Maria has the same control over what data flows either way. The difference is wh
 
 ## Choice point ③: what the app presents at each data holder
 
-In the core story the app presents a ticket. The orange choice uses the same `cms_smart` call the walkthrough documents:
+In the core story the app presents a ticket. The alternative uses the same `cms_smart` call described under choice point ①:
 
 ```mermaid
 sequenceDiagram
@@ -128,14 +140,14 @@ In the core story the app signed Maria in at the CSP and the service re-authenti
 
 ## The combinations side by side
 
-| | Who attests what Maria authorized | Who learns the full site list | Maria's steps | Data holder verifies |
-|---|---|---|---|---|
-| **Core story** (all blue) | shared authorization service, in a signed ticket | the service only; the app learns chosen sites | one redirect: sign-in (often silent) + one screen | ticket + evidence + own match |
-| **Service step, `cms_smart` at data holders** (blue ①②, orange ③) | the service (recorded), app (presented) | the service only | same as core | `cms_smart` call, unchanged from today |
-| **In-app selection** (blue ①③, orange ②) | shared authorization service | the app | one redirect, selection in app | ticket + evidence + own match |
-| **Today's documented shape** (all orange) | the app, backed by Library vetting | the app | none beyond CSP sign-in | `cms_smart` call |
+| | ① ② ③ | Who attests what Maria authorized | Who learns the full site list | Maria's steps | Data holder verifies |
+|---|---|---|---|---|---|
+| **Core story** | <span class="cp cp-b">1</span> <span class="cp cp-b">2</span> <span class="cp cp-b">3</span> | shared authorization service, in a signed ticket | the service only; the app learns chosen sites | one redirect: sign-in (often silent) + one screen | ticket + evidence + own match |
+| **Service step, `cms_smart` at data holders** | <span class="cp cp-b">1</span> <span class="cp cp-b">2</span> <span class="cp cp-o">3</span> | the service (recorded), app (presented) | the service only | same as core | `cms_smart` call, unchanged from today |
+| **In-app selection** | <span class="cp cp-b">1</span> <span class="cp cp-o">2</span> <span class="cp cp-b">3</span> | shared authorization service | the app | one redirect, selection in app | ticket + evidence + own match |
+| **Today's documented shape** | <span class="cp cp-o">1</span> <span class="cp cp-o">2</span> <span class="cp cp-o">3</span> | the app, backed by Library vetting | the app | none beyond CSP sign-in | `cms_smart` call |
 
-One dependency: orange at ① forces orange at ② and ③, because without the authorization step there is no service screen and no tickets. The rest combine freely.
+One dependency: if the grant is app-asserted (①), then site narrowing happens in the app (②) and data holders see `cms_smart` (③), because without the authorization step there is no service screen and no tickets. The rest combine freely.
 
 ---
 
@@ -145,5 +157,11 @@ One dependency: orange at ① forces orange at ② and ③, because without the 
 - **Single-place revocation.** Maria revokes the grant where she made it, and the revocation reaches every credential derived from it, instead of hunting through per-app and per-portal switches.
 - **An audit story that names the app.** The ticket records which app Maria authorized; that is what data holders log and what she will recognize later.
 - **Incremental federation.** A service that today shows its own network's matches can add peer networks as agreements form. The patient's stops shrink from many toward one without any flag-day.
+
+## Keys over time
+
+The app's keys live at its `jwks_uri` and rotate there on the app's own schedule. The CMS statement binds the URL, not a key, so rotation needs no re-issuance anywhere ([example](example-artifacts/phase5-key-rotation.md)). Any credential a network or a trust community issues to the app has to track the `jwks_uri` automatically; if re-syncing means emailing someone, rotation has turned into a manual per-network step.
+
+---
 
 *Design context.* Several parties in the core story happen to be distinct: the CSP that proofs identity, the service that captures authorization, the app that receives data. That distinctness has consequences: the party attesting the grant has no financial stake in the data flowing. CMS's own position that a CSP should not learn sites of care leans the same way. But none of these flows mandates the separation, and the table's rightmost rows collapse the parties deliberately. The table is the honest accounting; deployments choose their row.
