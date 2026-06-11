@@ -8,9 +8,10 @@
 - [Phase 2b — Dynamic registration at a Beta data holder](phase2b-beta-dynreg.md)
 - [Phase 2c — UDAP dynamic registration at a Gamma data holder](phase2c-gamma-udap.md)
 - [Phase 3 — Patient-bound token and $rls at Beta](phase3-rls.md)
-- [Phase 4a — Facilitated retrieval on Alpha](phase4a-alpha-facilitated.md)
+- [Phase 4a — Alpha-wide client_id at General Hospital's token endpoint](phase4a-alpha-facilitated.md)
 - [Phase 4b — Federated retrieval at Lakeside Clinic (Beta; Gamma is identical)](phase4b-federated.md)
+- [Alternative shape — a signed permission ticket](permission-ticket-alternative.md)
 - [Phase 5 — Key rotation](phase5-key-rotation.md)
 - [Keys and trust anchors](keys-and-trust-anchors.md)
 
-*Generated 2026-06-10T15:29:34.000Z by [tools/artifact-generator](https://github.com/jmandel/cms-ns/tree/no-home-network/tools/artifact-generator).*
+*Generated 2026-06-11T17:19:12.000Z by [tools/artifact-generator](https://github.com/jmandel/cms-ns/tree/no-home-network/tools/artifact-generator).*

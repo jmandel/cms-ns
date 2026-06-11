@@ -1,7 +1,7 @@
 # An App's Life Across CMS-Aligned Networks, Without a Home Network
 
 **Flow walkthrough with sequence diagrams**
-*Companion to [apps-without-home-networks.md](apps-without-home-networks.md). Shows that a patient-facing app, carrying only its CMS App Library credentials, can register with networks that work in three different ways, locate records, and retrieve data, with no home network and no manual per-data-holder steps.*
+*Companion to [apps-without-home-networks.md](apps-without-home-networks.md). Shows that a patient-facing app, carrying only its CMS App Library credentials, can register with networks that work in three different ways, locate records, and retrieve data, with no home network and no manual per-data-holder steps. Nothing in these flows changes if a home network exists; none of the mechanics requires one.*
 
 > **Conventions**
 >
@@ -11,7 +11,7 @@
 >   - The real wire profile is an open question (can-spec Appendix A1); nothing here depends on its exact shape.
 > - **Registration** uses [RFC 7591 Dynamic Client Registration](https://www.rfc-editor.org/rfc/rfc7591) as the shared wire format wherever dynamic registration appears; the *software statement* presented varies by trust path.
 > - **Identity**, per CMS HTE requirements: every token request that leads to RLS or data queries carries IAL2 identity evidence, and the resulting access token is bound to that verified patient.
-> - **Token requests** follow the [Blue Button CMS Aligned Networks pattern](https://bluebutton.cms.gov/cms-aligned-networks-documentation/): `client_credentials` grant with an asymmetric `client_assertion`, carrying a `cms_smart` extension whose claims include `purpose_of_use` (`PATRQT` for patient access) and the CSP-issued IAL2 `id_token`.
+> - **Token requests** follow the [Blue Button CMS Aligned Networks pattern](https://bluebutton.cms.gov/cms-aligned-networks-documentation/): `client_credentials` grant with an asymmetric `client_assertion`, carrying a `cms_smart` extension whose claims include `purpose_of_use` (`PATRQT` for patient access) and the CSP-issued IAL2 `id_token`. This shape is used for concreteness because CMS has documented it, not because the architecture depends on it: an authorization-code flow, or a flow built on permission tickets, satisfies the same requirement. What the requirement actually is: some automated way for the app to authenticate to each data holder's token endpoint, with the patient's identity evidence flowing through to the data holder so it can apply its own matching and policy. A network may help mint or relay credentials, but issuing access tokens for its data holders' APIs implies policy decisions that belong to the edge nodes.
 
 ---
 
@@ -24,7 +24,7 @@
 | **NPD** | National Provider Directory: networks, endpoints, trust-anchor metadata. |
 | **Alpha Health Network** | Offers **centralized registration through a developer portal**: a few manual steps, then one client ID good for the whole network; apps query each Alpha data holder's FHIR endpoint directly (the "Epic model"). |
 | **Beta Exchange** | Offers **CMS-software-statement dynamic registration** directly at each of its data holders' authorization servers; Beta itself runs the RLS and publishes endpoints. |
-| **Gamma Trust Network** | A **UDAP trust community**: one-time per-network credentialing with Gamma's recognized CA, then UDAP dynamic registration at each data holder. |
+| **Gamma Trust Network** | A **UDAP trust community**: one-time per-network credentialing with Gamma's recognized CA, then UDAP dynamic registration at each data holder. Gamma runs its own RLS endpoint. |
 | **Maria** | A patient, IAL2-verified through a CMS-approved credential service provider (CSP). |
 
 The three networks use three different registration styles, and the walkthrough demonstrates one invariant:
@@ -85,6 +85,8 @@ NPD tells the app (or the client library it uses) how each network handles regis
 
 Any of the three networks may put a human in the loop at the network level. Alpha's portal makes this visible, but Beta's and Gamma's data holders may equally look for a signal from their own network that an app is okay to let in, and the network behind that signal may have run a manual review. All of this is conformant, because whatever manual steps exist attach to the **network**, once; the app's interaction with each **data holder** stays automatic.
 
+Each network documents its own registration method, and all of them are allowed so long as the method works uniformly across that network's data holders. Over time the ecosystem should converge on a small number of patterns rather than thirty, but that convergence needs real industry experience first; the requirement worth holding now is that access scales within each network.
+
 ### 2a. Alpha — centralized registration via a developer portal (one client ID for the whole network)
 
 Alpha runs a developer portal, and registering involves a human:
@@ -102,6 +104,8 @@ sequenceDiagram
     Portal->>Portal: Verify CMS signature, library_status = active<br/>Pre-fill app name, URIs, contacts from the statement
     Portal->>Dev: Ad-hoc verification, per Alpha policy<br/>(e.g. domain-ownership challenge or key-possession proof)
     Dev-->>Portal: Complete the check
+    Portal->>Dev: Gather any app details not captured in the<br/>CMS statement (e.g. which APIs/scopes the app uses)
+    Dev-->>Portal: Provide details
     Portal->>AAS: Provision registration
     AAS-->>Dev: client_id (valid for all Alpha data holders)
 ```
@@ -110,7 +114,7 @@ sequenceDiagram
 
 These manual steps are acceptable because they happen once per network; the invariant only forbids manual work per data holder. The CMS statement still does its job: the portal pre-fills its form from a signed artifact and verifies one signature instead of re-vetting the app. The details of the ad-hoc verification are Alpha's business; this walkthrough deliberately leaves them unspecified, and the spec should too.
 
-One registration covers every data holder on Alpha; the network absorbs the edge complexity as part of its product.
+One registration covers every Alpha data holder participating in the CMS-Aligned exchange; the network absorbs the edge complexity as part of its product.
 
 ### 2b. Beta — dynamic registration at each data holder, CMS statement as the trust signal
 
@@ -125,7 +129,7 @@ sequenceDiagram
     opt network-level onboarding, per Beta policy (may be manual, may be skipped)
         App->>Beta: Request onboarding<br/>(link to CMS software statement)
         Beta->>CMS: Fetch and verify the statement
-        Beta->>Beta: Review per Beta policy<br/>(possibly manual)
+        Beta->>Beta: Internal review per Beta policy<br/>(opaque to apps, possibly manual)
         Beta-->>DH: Approval signal to its data holders: app okayed
     end
     App->>CMS: GET software-statement.jwt<br/>(fresh, ≤24h old)
@@ -155,7 +159,7 @@ sequenceDiagram
     CA-->>App: X.509 certificate
     loop for each Gamma data holder, automated
         App->>DH: UDAP dynamic registration<br/>(RFC 7591, software statement signed with X.509 key)
-        DH->>DH: Validate chain to community CA<br/>(anchor published in NPD)
+        DH->>DH: Validate chain to the Gamma community CA
         DH-->>App: client_id at that data holder
     end
 ```
@@ -206,40 +210,41 @@ The app repeats this flow at Alpha, Beta, and Gamma. The only difference between
 | Beta | Lakeside Clinic, County Health |
 | Gamma | Riverbend Medical |
 
-Purpose of use (`PATRQT`) is declared at the token request and travels with every downstream call (can-spec §10.3).
+Purpose of use (`PATRQT`) is declared at the token request and travels with every downstream call (can-spec §10.3). The network's authorization server here protects the network's own RLS API; tokens for data-holder APIs come from the data holders themselves (Phase 4).
 
 **Why an operation rather than a payload?** A simpler placeholder would skip `$rls` entirely and return the record-location results inside the token response itself. That works, but an operation lets the app pass parameters (geographic distribution, recency or date-range hints, resource-type interests) and re-query under the same patient-bound token as its needs change, without repeating the identity flow.
+
+**A natural evolution: permission tickets.** The `$rls` shape above returns locations and leaves the app to run the identity ceremony again per site. An alternative under active exploration ([SMART Permission Tickets, proposal 003](https://build.fhir.org/ig/jmandel/smart-permission-tickets-wip/proposal-003-smart-launch-issuance.html)) folds these together: the patient authorizes once at an issuer through a standard SMART App Launch code flow, and the token response carries signed permission tickets plus endpoint hints. The app redeems a ticket at each data holder's token endpoint via RFC 8693 token exchange; the data holder verifies the ticket signature, independently verifies the identity evidence embedded in it, performs its own patient match, and returns its own access token along with the matched patient id, so no separate `$match` step exists. The issuance ceremony is also the natural place for the patient to choose which locations the app learns about at all: the issuer filters both the endpoint hints and the tickets' data-holder scope to the patient's selections. Either shape satisfies the requirement stated in the Conventions: automated authentication to each data holder's token endpoint, identity evidence flowing through, and tokens issued at the edge. See a [signed example ticket](example-artifacts/permission-ticket-alternative.md).
 
 ---
 
 ## Phase 4 — Retrieving data
 
-In all three networks the app queries each data holder's FHIR endpoint directly. The flavors differ in one place: which authorization server issues the token.
+In all three networks the app queries each data holder's FHIR endpoint directly, and each data holder's own authorization server issues the access token after seeing the patient's identity evidence itself. Centralizing token issuance at the network would imply policy decisions (patient matching, scopes, sensitivity handling) that belong to the edge node. What the flavors differ in is how the client_id presented at the data holder was established: Alpha distributed one network-wide client_id at portal registration; Beta and Gamma data holders each issued their own at dynamic registration.
 
-### 4a. Alpha: tokens from the network's authorization server
+### 4a. Alpha: one network-wide client_id, tokens from each data holder
 
-The app uses its one Alpha-wide client_id; Alpha's authorization server issues a token that Alpha data holders honor:
+Alpha distributed the client_id; it does not issue access tokens. The app presents its Alpha-wide client_id, with Maria's identity evidence, at each data holder's own token endpoint:
 
 ```mermaid
 sequenceDiagram
     autonumber
     participant App as BP Buddy
-    participant AAS as Alpha authorization server
-    participant DH as Alpha data holder<br/>FHIR endpoints
+    participant DH as Alpha data holder<br/>auth server + FHIR endpoint
 
     Note over App: Maria's IAL2 session is current (fresh auth_time)
-    App->>AAS: POST /token: client_credentials + client_assertion<br/>(client_id from Phase 2a)<br/>cms_smart: purpose_of_use PATRQT, IAL2 id_token
-    AAS->>AAS: Verify client_assertion against the app's jwks_uri<br/>Validate id_token, match patient (§6)
-    AAS-->>App: access_token bound to Maria,<br/>honored by Alpha data holders
     loop for each Alpha data holder holding records
-        App->>DH: GET Observation?patient=...&category=vital-signs
+        App->>DH: POST /token: client_credentials + client_assertion<br/>(the Alpha-wide client_id from Phase 2a)<br/>cms_smart: purpose_of_use PATRQT, IAL2 id_token
+        DH->>DH: Recognize the network-distributed client_id<br/>Verify client_assertion against the app's jwks_uri<br/>Validate id_token, match patient (§6)
+        DH-->>App: access_token bound to Maria,<br/>with the locally matched patient id
+        App->>DH: GET Observation?patient={matched id}&category=vital-signs
         DH-->>App: FHIR Bundle
     end
 ```
 
-*Example artifacts: [the Alpha token request and a direct FHIR query](example-artifacts/phase4a-alpha-facilitated.md).*
+*Example artifacts: [the token request at a data holder using the Alpha-wide client_id](example-artifacts/phase4a-alpha-facilitated.md).*
 
-### 4b. Beta and Gamma: tokens from each data holder's authorization server
+### 4b. Beta and Gamma: per-data-holder client_ids, tokens from each data holder
 
 ```mermaid
 sequenceDiagram
@@ -251,14 +256,16 @@ sequenceDiagram
     Note over App,LAS: client_id already exists from Phase 2b dynreg —<br/>if a new endpoint appears later, the app dynregs on first contact, automatically
     App->>LAS: POST /token: client_credentials + client_assertion<br/>cms_smart: purpose_of_use PATRQT, IAL2 id_token
     LAS->>LAS: Verify client_assertion against the app's jwks_uri<br/>Validate id_token freshness and replay (can-spec §9)
-    LAS-->>App: access_token + refresh_token (rolling 90-day, §9)
+    LAS-->>App: access_token + refresh_token (rolling 90-day, §9),<br/>with the locally matched patient id
     App->>LFHIR: GET Observation / MedicationRequest / DocumentReference ...
     LFHIR-->>App: FHIR Bundles (USCDI v3 scope per granted scopes)
 ```
 
 *Example artifacts: [the Lakeside token request, refresh_token, and FHIR query](example-artifacts/phase4b-federated.md).*
 
-The Gamma flow is identical from here; the UDAP-vs-CMS-statement difference was consumed at registration time. Runtime is the same everywhere: a `client_credentials` grant with an asymmetric `client_assertion` (its `kid` resolvable at the app's `jwks_uri`), a `cms_smart` extension carrying the IAL2 `id_token`, and a patient-bound access token. The only thing that varies is which authorization server issues the token: Alpha's network server, or each Beta and Gamma data holder's own.
+The Gamma flow is identical from here; the UDAP-vs-CMS-statement difference was consumed at registration time. Runtime is the same everywhere: a `client_credentials` grant with an asymmetric `client_assertion` (its `kid` resolvable at the app's `jwks_uri`), a `cms_smart` extension carrying the IAL2 `id_token`, and a patient-bound access token issued by the data holder. The only thing that varies is where the client_id came from.
+
+On refresh: data holders may issue refresh tokens under the rolling 90-day window of can-spec §9, as 4b shows. In the permission-ticket model described under Phase 3, a still-valid ticket is itself the continuation credential: the app re-presents it for a fresh access token, and renews the tickets at the issuer when they expire.
 
 ---
 

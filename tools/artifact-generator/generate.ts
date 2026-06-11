@@ -51,6 +51,7 @@ const appKeyA = await makeKey("RS384"); // app's primary key (Blue Button allows
 const appKeyB = await makeKey("RS384"); // rotation target
 const cspKey = await makeKey("RS256"); // ID.me-style id_token signing
 const udapKey = await makeKey("RS256"); // key inside the Gamma X.509 cert
+const ticketIssuerKey = await makeKey("ES256"); // Beta issuer signing permission tickets
 
 // X.509: a Gamma community CA and an app cert over udapKey, via openssl.
 const tmp = join(import.meta.dir, ".x509-tmp");
@@ -497,19 +498,20 @@ writePage(
 );
 
 // =====================================================================
-// Phase 4a — Alpha facilitated retrieval
+// Phase 4a — Alpha: network-wide client_id, token issued by the data holder
 // =====================================================================
-const alphaAssertion = await clientAssertion("alpha-net-bp-buddy-7c31", ALPHA_TOKEN);
+const GENERAL_TOKEN = "https://generalhospital.example/oauth/token";
+const alphaAssertion = await clientAssertion("alpha-net-bp-buddy-7c31", GENERAL_TOKEN);
 const alphaAccessToken = opaque();
 
 writePage(
   "phase4a-alpha-facilitated",
-  "Phase 4a — Facilitated retrieval on Alpha",
-  "One token from Alpha's authorization server, honored by Alpha data holders; the FHIR query goes to the data holder's own endpoint.",
+  "Phase 4a — Alpha-wide client_id at General Hospital's token endpoint",
+  "Alpha distributed one client_id at portal registration but does not issue access tokens; each data holder's own authorization server does, after validating the identity evidence itself. The same exchange repeats at every Alpha data holder holding records.",
   [
     httpMd(
-      "Token request to Alpha's authorization server",
-      [`POST ${ALPHA_TOKEN} HTTP/1.1`, "Host: auth.alpha-health.example", "Content-Type: application/x-www-form-urlencoded"],
+      "Token request — to the data holder, using the network-distributed client_id",
+      [`POST ${GENERAL_TOKEN} HTTP/1.1`, "Host: generalhospital.example", "Content-Type: application/x-www-form-urlencoded"],
       {
         grant_type: "client_credentials",
         scope: "patient/Observation.rs launch/patient",
@@ -517,18 +519,18 @@ writePage(
         client_assertion: `${alphaAssertion.slice(0, 60)}... (decoded below)`,
       },
     ),
-    jwtMd("client_assertion", alphaAssertion),
-    httpMd("Token response", ["HTTP/1.1 200 OK", "Content-Type: application/json"], {
+    jwtMd("client_assertion — iss/sub are the Alpha-wide client_id; the cms_smart extension carries Maria's IAL2 id_token to the data holder", alphaAssertion),
+    httpMd("Token response — issued by General Hospital, with its locally matched patient id", ["HTTP/1.1 200 OK", "Content-Type: application/json"], {
       access_token: alphaAccessToken,
       token_type: "Bearer",
       expires_in: 1800,
       scope: "patient/Observation.rs launch/patient",
-      patient: "alpha-master-0314",
+      patient: "gh-local-228847",
     }),
     httpMd(
-      "FHIR query — directly to General Hospital's endpoint",
+      "FHIR query — using the matched id",
       [
-        "GET https://fhir.generalhospital.example/r4/Observation?patient=alpha-master-0314&category=vital-signs&_count=1 HTTP/1.1",
+        "GET https://fhir.generalhospital.example/r4/Observation?patient=gh-local-228847&category=vital-signs&_count=1 HTTP/1.1",
         `Authorization: Bearer ${alphaAccessToken}`,
         "Accept: application/fhir+json",
       ],
@@ -544,7 +546,7 @@ writePage(
             status: "final",
             category: [{ coding: [{ system: "http://terminology.hl7.org/CodeSystem/observation-category", code: "vital-signs" }] }],
             code: { coding: [{ system: "http://loinc.org", code: "85354-9", display: "Blood pressure panel" }] },
-            subject: { reference: "Patient/alpha-master-0314" },
+            subject: { reference: "Patient/gh-local-228847" },
             effectiveDateTime: "2026-05-28T09:30:00Z",
             component: [
               { code: { coding: [{ system: "http://loinc.org", code: "8480-6" }] }, valueQuantity: { value: 128, unit: "mmHg" } },
@@ -553,6 +555,61 @@ writePage(
           },
         },
       ],
+    }),
+  ],
+);
+
+// =====================================================================
+// Permission-ticket alternative (Phase 3 evolution)
+// =====================================================================
+const permissionTicket = await new SignJWT({
+  ticket_type: "patient-self-access-v1",
+  subject: {
+    patient: { name: [{ family: "Lopez", given: ["Maria"] }], birthDate: "1962-03-15" },
+  },
+  subject_identity_evidence: idToken,
+  presenter_binding: { jkt: appKeyA.jwk.kid },
+  access: {
+    permissions: [{ resource_type: "Observation", interactions: ["read", "search"] }],
+    data_holder_filter: [{ organization: "Lakeside Clinic" }],
+  },
+})
+  .setProtectedHeader({ alg: "ES256", kid: ticketIssuerKey.jwk.kid, typ: "JWT" })
+  .setIssuer("https://issuer.beta-exchange.example")
+  .setAudience(LAKESIDE_FHIR)
+  .setIssuedAt(now)
+  .setExpirationTime(now + 3600)
+  .setJti(uuid())
+  .sign(ticketIssuerKey.privateKey);
+
+writePage(
+  "permission-ticket-alternative",
+  "Alternative shape — a signed permission ticket",
+  "In the SMART Permission Tickets model (proposal 003), the patient authorizes once at an issuer via a SMART App Launch code flow; the token response carries tickets like this one plus endpoint hints. The app redeems the ticket at each data holder's token endpoint via RFC 8693; the data holder verifies the ticket, independently verifies the embedded identity evidence, matches the patient locally, and issues its own token with the matched id.",
+  [
+    [
+      jwtMd("Permission ticket — note subject demographics, the embedded IAL2 id_token as subject_identity_evidence, and the presenter binding to the app's key", permissionTicket),
+      "",
+      "The `subject_identity_evidence` value is the same CSP-issued id_token shown in [phase3-rls](phase3-rls.md); the data holder verifies its signature against the CSP's keys itself rather than taking the issuer's word for it. `presenter_binding.jkt` is the thumbprint of the app key in [keys-and-trust-anchors](keys-and-trust-anchors.md).",
+    ].join("\n"),
+    httpMd(
+      "Redemption — RFC 8693 token exchange at the data holder",
+      [`POST ${LAKESIDE_TOKEN} HTTP/1.1`, "Host: lakeside.example", "Content-Type: application/x-www-form-urlencoded"],
+      {
+        grant_type: "urn:ietf:params:oauth:grant-type:token-exchange",
+        subject_token_type: "https://smarthealthit.org/token-type/permission-ticket",
+        subject_token: `${permissionTicket.slice(0, 60)}... (full value above)`,
+        scope: "patient/Observation.rs",
+        client_assertion_type: "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
+        client_assertion: "(signed with the key named by presenter_binding.jkt)",
+      },
+    ),
+    httpMd("Token response — the data holder's own token, with its matched patient id", ["HTTP/1.1 200 OK", "Content-Type: application/json"], {
+      access_token: opaque(),
+      token_type: "Bearer",
+      expires_in: 3600,
+      scope: "patient/Observation.rs",
+      patient: "lakeside-449210",
     }),
   ],
 );
@@ -668,7 +725,8 @@ writePage(
     ["**CMS statement signing JWKS** (published at a CMS well-known location):", "", "```json", pretty({ keys: [cmsKey.jwk] }), "```"].join("\n"),
     ["**BP Buddy JWKS** at `" + APP_JWKS_URI + "` (keys A and B):", "", "```json", pretty({ keys: [appKeyA.jwk, appKeyB.jwk] }), "```"].join("\n"),
     ["**CSP (ID.me-style) JWKS:**", "", "```json", pretty({ keys: [cspKey.jwk] }), "```"].join("\n"),
-    ["**Gamma community CA certificate** (the NPD-published anchor):", "", "```", caCertPem.trim(), "```"].join("\n"),
+    ["**Beta ticket-issuer JWKS** (signs permission tickets in the alternative shape):", "", "```json", pretty({ keys: [ticketIssuerKey.jwk] }), "```"].join("\n"),
+    ["**Gamma community CA certificate** (the anchor Gamma distributes to its data holders):", "", "```", caCertPem.trim(), "```"].join("\n"),
     ["**BP Buddy's Gamma-issued certificate** (subjectAltName URI = `" + APP_URI + "`, chains to the CA above):", "", "```", appCertPem.trim(), "```"].join("\n"),
   ],
 );
@@ -686,6 +744,7 @@ writePage(
     "phase3-rls",
     "phase4a-alpha-facilitated",
     "phase4b-federated",
+    "permission-ticket-alternative",
     "phase5-key-rotation",
     "keys-and-trust-anchors",
   ];

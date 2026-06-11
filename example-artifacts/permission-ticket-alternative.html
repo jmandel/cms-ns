@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Phase 4a — Alpha-wide client_id at General Hospital's token endpoint</title>
+<title>Alternative shape — a signed permission ticket</title>
 <style>
   :root { --fg:#1a1a1a; --bg:#fff; --bg-code:#f4f4f5; --accent:#0f5132; --accent-soft:#e7f1ec; --rule:#e5e5e5; }
   * { box-sizing:border-box; }
@@ -42,7 +42,7 @@ const renderer = {
   }
 };
 marked.use({ renderer, mangle: false, headerIds: true });
-fetch('phase4a-alpha-facilitated.md').then(r => r.text()).then(md => {
+fetch('permission-ticket-alternative.md').then(r => r.text()).then(md => {
   document.getElementById('content').innerHTML = marked.parse(md);
 });
 </script>

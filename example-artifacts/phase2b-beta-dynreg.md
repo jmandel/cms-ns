@@ -8,12 +8,12 @@
 POST https://lakeside.example/oauth/register HTTP/1.1
 Host: lakeside.example
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJSUzM4NCIsImtpZCI6Ii1uYThkUHVs... (key-possession JWT, same shape as in 2a)
+Authorization: Bearer eyJhbGciOiJSUzM4NCIsImtpZCI6ImkyYTllbDlk... (key-possession JWT, same shape as in 2a)
 ```
 
 ```json
 {
-  "software_statement": "eyJhbGciOiJFUzM4NCIsImtpZCI6Ik1WdHV0WG5PaHRiblJUbHdwOEVyNV9D... (full value in phase0-software-statement)",
+  "software_statement": "eyJhbGciOiJFUzM4NCIsImtpZCI6IjNfRnAxQ1FPRTVoSmpGQWp6RkRReGt0... (full value in phase0-software-statement)",
   "grant_types": [
     "client_credentials"
   ],
@@ -44,4 +44,4 @@ Content-Type: application/json
 }
 ```
 
-*Generated 2026-06-10T15:29:34.000Z by [tools/artifact-generator](https://github.com/jmandel/cms-ns/tree/no-home-network/tools/artifact-generator). Keys are throwaway examples; every signature verifies against the keys in [keys-and-trust-anchors](keys-and-trust-anchors.md).*
+*Generated 2026-06-11T17:19:12.000Z by [tools/artifact-generator](https://github.com/jmandel/cms-ns/tree/no-home-network/tools/artifact-generator). Keys are throwaway examples; every signature verifies against the keys in [keys-and-trust-anchors](keys-and-trust-anchors.md).*

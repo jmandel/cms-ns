@@ -10,11 +10,11 @@
     {
       "crv": "P-384",
       "kty": "EC",
-      "x": "q6lJPguvq4ynuZJstIYH48SK_DHddpTwnEOqeWgTBux5aeQdSihZ2jAUY8u4cS8G",
-      "y": "S8rTUFnEzg3PZNEMat0aop3ESBLn4zuxKa4e73d5I4WpRDgO9t6eUTu4n-sl9pXM",
+      "x": "Ou7SDQWOT-JT2NE8O601c6HSQaXdgXYsnwMjhePZNb3A6VAck8p3X21dP0FZ7W2e",
+      "y": "m9EotLlyTWMuKhJ0pdeaJOP_v0KPKxlcYkM3RRNvlQ61dXwYwcaoXaKmyRDpWn4E",
       "alg": "ES384",
       "use": "sig",
-      "kid": "MVtutXnOhtbnRTlwp8Er5_CC4GUHp-RyRchBeFIiXa0"
+      "kid": "3_Fp1CQOE5hJjFAjzFDQxktiEnDs1Lw56HsBcie0eFM"
     }
   ]
 }
@@ -30,18 +30,18 @@
     {
       "e": "AQAB",
       "kty": "RSA",
-      "n": "1tcM_JTDPx-v6xs_yhZO9bxwDHCC-mwLt37x2vucOVgy1OSJyWLNTS0bQ-b458VpGlSByhHi4z6uTB4F3-YjfFXcFYtZy0PZOYlYjYySVaZVrEx_DNYoDe1zVxbVJv7rnAnt3_1j3PUy5qCes-jF6Ed3BL7JurXSs-uicWWyQwaAOU95VS4hcM1hRlBOjvPQN1_xzYdq4iogwUsqDYnIDSkFUrT4HrKxln6lU8NunXnIq8A89_pHWWtbvK3FyHuqYz-st8Quzx319nD0FJ5Peq8Bb_RJPpOWRBLAZ7l_qS7k9ZNJdb2T02FF_4hoyErWTDGr9LV4goV24b5Q9xj9dw",
+      "n": "vf9KmYWMJJMqCl5v84gso4QqSjPhlB36cHKMmgTu5kU99Og2q4o02-bMVLp2n34DQCMj0XxOWBOMhLuotjBaMgWW4t5GrFfQap-VuYNoqXPJ5Au6-fSoFgkAL6Z7IqQ52YHCMwF6H1xSfTxEQS-JiiiL2zeqy6FMiQWJiekHDgId2FFSlcql18Wi6f1BgD2oUy5aVck97906gO5cq5l7JTztzC5coQTiyZy0ebYucMbLpMNq6Q94ryAJ0wkMOzvGvwXHOIt_xZZ96Hv6yiSbDUapx0mGpO3LLqtHmn7tPGztApt4Y_gMWlFuEMRtrsjm5e9-hRTYrxqANYrr9HlpUw",
       "alg": "RS384",
       "use": "sig",
-      "kid": "-na8dPulkqp3wlE2HuVACU7b7tXuGCvRYrzBehEuQKw"
+      "kid": "i2a9el9dK6hxKwFxNG-XZo3V8mGZiL9pkZb-wsBwzic"
     },
     {
       "e": "AQAB",
       "kty": "RSA",
-      "n": "yEYiE1IXa-saUtpaJfUXLZs59lOshRHXQVetN--05Q6PFL3rs_VDdqWp3m6D1Fhi7T_0onr03To9B66JFExuvZ0C6Lit4Shmd9MKZIy9WFF9N9BrSISpAoDhNRtY8MWQNNfTqURZaYvSQ3pkJkXR420gyKwmQ-auLbNHpc7hs4BFbZRljKBd7zJIuFVOFMJaHv_naTSLASUOLO7LQku-gL4gETfo8Tu1F6jdVOEsyn0gBBn9bSehX0hnf-kZnPBC5I7b8nllX6aYU7o_O83o1NK7O7ZYRVQUyR-BoJJoYxq4UdRQFxZssxP_Igko4-dG8SBBtiu1mWwVtH59VSayQw",
+      "n": "0RdJAujjQq3oQM8w9cj2CXFFfV35rZN2fM3gyT-yy2c-8_5xOmNm7rNCSGZy-B5RF1FyrU-McNhTVOyjEj8LfO4gQLWCi7oI-zxUYn8nnTf2_SonCuadAVpLm3jR8EOtzOt7IKajt7nXn3z2R2tpNhiNqwJQf20eTJFsWu8SBCwCQ_QQ7p2HZy9kNU21OKykWidk8kVJMkTswECxXzeyPNZmf6dauJLBXme6aOsQ47RptezFZs8XoPlwvHhXVEx21C2Itrjel2nQmITa2LA2TIzElTTK2UVhZ0tMGZ32eZMx2i3skrc_7l6z_J6b8QQUH9JfuYAdEKtm-sSHfDRYNQ",
       "alg": "RS384",
       "use": "sig",
-      "kid": "rSJikxyOV9P-OVQcVvpb_hNb4z7cAnBXOJqxSV5sHvM"
+      "kid": "OQJ1xqfMi7s6elKMG48s4CTz7f96yvo7OrpaNt2Z5D8"
     }
   ]
 }
@@ -57,10 +57,10 @@
     {
       "e": "AQAB",
       "kty": "RSA",
-      "n": "oabBVS14giZGYxGRauM2aa68Vsdn1-A9bAOk2-81aWqTjexNVQg5KhEq6N2Ud8KyoCgAX-qdVGK0HKH_NeBVHIT8eoR8cQpEBg0K3pmJrgFHg-UJniINl0I3YqeYeAbqCPns-QB7w2z5rhnBNlL4PY2Q4YYw_WAPLK3biL2uUakaIKS2Ns4u4HKx1FQAcrVWlQfAqjvM3FNGpYXQQylTeg1zQ9ey8RBpE5jpkT8_WNll0cjBgrLeFyF4eLleEDB9sevQLVR9Kw4bRe8OrgBI0IJMsXjCghgYo_MLCYoU9wMMlEXmKUa9S7SZoM02J0_SaCN1tj37A3IOt0nefMeIQQ",
+      "n": "uq-ivz_JLo5bVvcCIdjMQbBxGd5UOf7dA9zEljSByZyn9sbVZsjttXY-lGW3r0K4EhF3pBmzhl9dkN7DJGu35r6REVYJkw5Ejwz39AH0D7xJM1omtzmzqdWpAGYLfFujr39PRt_GFjoXJLpvosVC_mDkVrwKtkNWlMJdZqCh7vui2xktvSS-6hV6EDYCGUL8NifLC2TO6t84SnNCsjC6MF0VPy66F1ifcxKxFRB8YfSbhqSOLFpkqlwKXZZwgLQNaWZt9-z1USuPXP-jfhosIzc0TUilrcyqLEOWWp2P_EdsMn7QcEjWun7E5tUPdVo8Xbw-jev2YRt0k3YW34VJcw",
       "alg": "RS256",
       "use": "sig",
-      "kid": "qsLc7eg2e8VsSp9uvwJevxKDIlQkISeNsrQRbKK3Jvs"
+      "kid": "_Yu72g7KQDNsgKUN9m3JmmutTmVGiLZk-weovz6aCFM"
     }
   ]
 }
@@ -68,29 +68,49 @@
 
 ---
 
-**Gamma community CA certificate** (the NPD-published anchor):
+**Beta ticket-issuer JWKS** (signs permission tickets in the alternative shape):
+
+```json
+{
+  "keys": [
+    {
+      "crv": "P-256",
+      "kty": "EC",
+      "x": "8-SpnBwC2EpIDT-pwGzqLNqO3I4WA_99f2iVBRqsXpg",
+      "y": "OH7uCI802pQhHmDlRLQSIJmtVIO7w0dEBOWSraWHz-k",
+      "alg": "ES256",
+      "use": "sig",
+      "kid": "yjoOMmtucioW3Qkc8sXjlLOU5dPQRVuwPvOGAxnX-y8"
+    }
+  ]
+}
+```
+
+---
+
+**Gamma community CA certificate** (the anchor Gamma distributes to its data holders):
 
 ```
 -----BEGIN CERTIFICATE-----
-MIIDYzCCAkugAwIBAgIUWRnlggHHRf0b774DsLV6cyPCCREwDQYJKoZIhvcNAQEL
+MIIDYzCCAkugAwIBAgIUWoL5AVuFhU7fUskLM3p60yPnc/0wDQYJKoZIhvcNAQEL
 BQAwQTEhMB8GA1UEAwwYR2FtbWEgVHJ1c3QgQ29tbXVuaXR5IENBMRwwGgYDVQQK
-DBNHYW1tYSBUcnVzdCBOZXR3b3JrMB4XDTI2MDYxMDE1MjkzNVoXDTI3MDYxMDE1
-MjkzNVowQTEhMB8GA1UEAwwYR2FtbWEgVHJ1c3QgQ29tbXVuaXR5IENBMRwwGgYD
+DBNHYW1tYSBUcnVzdCBOZXR3b3JrMB4XDTI2MDYxMTE3MTkxMloXDTI3MDYxMTE3
+MTkxMlowQTEhMB8GA1UEAwwYR2FtbWEgVHJ1c3QgQ29tbXVuaXR5IENBMRwwGgYD
 VQQKDBNHYW1tYSBUcnVzdCBOZXR3b3JrMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A
-MIIBCgKCAQEAsKSaBu0wpCDEoooUhaT+O/LgkV++TyxT0KpVzWhujReA4Y3/I1Wv
-jDuYk8JDg9+CJguzthjwfhmrjeY8b/a1nnVljxE84Y42dzbt1PlRxgtAbypg3KMF
-Os5R24hAK9BBKviSK7RBMsTHz6a88/0CXi1MpAJtfo0bOqpq7S8btE0EGfJMWnyG
-3s+g3/9iTwtVB7B7939GHCx9dUNdz/aAV84icIhPHrAEWiZyy5n3geYHzYORaxu4
-hcDYn38W6mOMXc3VFNWUxgkAOkAaGxilVbZoDg0oVbe7Y+rAcLZfp31bNOtXdR7I
-aF3auc3f/YonPmBsEhlvRQ3Y7ZpDcIm2fwIDAQABo1MwUTAdBgNVHQ4EFgQUM+g1
-fwXviu440mdddfew9oLtzoMwHwYDVR0jBBgwFoAUM+g1fwXviu440mdddfew9oLt
-zoMwDwYDVR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEAkY53oJywLBFE
-Tbxhlu3ryr43BaDBfoPQeuLi++9lXxxuGiZTa1bnwf28jrW09ngUks8R2ELjwEEK
-FY/4fpCyjDSilU8DnF3N3L+Fm4YJwQ0WzcnSGZq2C0vWNzYh3Bl66znI98W46RJ3
-ucLwckShFcYpf1khqVMWh0C9Vwb6AqcCOANyqFX9/DCEwkKwHdVkjKK2K4UfDoOw
-2MjhBM3Wa3iK2IlQfKJpoz37zDHhiGuU1DeAUu0dCU2vi+toHp0+p/hh/1wy+rQp
-kHxNjNeKSXKbkE6XNPCECxlJx5RBAJtldZj1EELfNYZQbvTi1Jx+8fOpOuiN1PkA
-foOheqF/0g==
+MIIBCgKCAQEAzcwutLU8VFbS9TLQOW0Iwzos2wHZksLIxXHB+AEHUTQr1mc8DDcj
+8YlKG81BlOHKYK0QqYNRBjJKJlhXX504OGCSJJm/I6JcXb26xzMa4yxE7PWebjiM
+sdr9LXwlTkWPuJn7d7mRFHrTTR5ZO9cdG7aK3sVrgsOk3+2vUzD/ziBZUiILrAIS
+FhHd+Lsxb51YCX4akwLcxtjEwqEoZmKfMvcS/TLc2n0VYlXKQNidUtgQuIKCRgDB
++g5L10M8PSZON7JriPBrdplh2/E6IABRXZb4aaq/a46A6xtIYP6iKpO3vqa+Ha2b
+O5cJRSl/FHsVwOqHUbqAuCbonzOx8lC74wIDAQABo1MwUTAdBgNVHQ4EFgQUEnm9
+wfR9MWyE+XnUlotmj2jBtFowHwYDVR0jBBgwFoAUEnm9wfR9MWyE+XnUlotmj2jB
+tFowDwYDVR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEAVL3BRZzEy1Fz
+ENopE87nMVgLJrCQJRHZBvWWfMKzx7SaFxjMZbnq09lhQwTTIt6WAeWi0LNYvQmC
+sl3En2UXS6e1rsHUWoGtEDdhrGqZVelBiaH+hx39+gXF8L8/GGD0S1hB/PFc0RO2
+50rcMSfrVIANy7hANyBqbfePx7TVx3++SvKYPmxClL2YAhoZNk7bWf+fyILhbzwC
+dUSC9YL103u06g3KGEAaoIVaNy3ihnauajG7e+xetx7fScagiAbmZz9cgFivVmEV
+E2ocytOHZvqsOeIr1Cxu3tmawEN52AWCZ3mrZXJi1iMMD5upx6EP8LP2uTAe09y6
+by8JjXKwBA==
 -----END CERTIFICATE-----
 ```
 
@@ -100,26 +120,26 @@ foOheqF/0g==
 
 ```
 -----BEGIN CERTIFICATE-----
-MIIDXzCCAkegAwIBAgIUInfGASkhBquroKD0aO6KB2Pvf5YwDQYJKoZIhvcNAQEL
+MIIDXzCCAkegAwIBAgIUR/637Hvx3eD5JGVBMyEGDTFCpgkwDQYJKoZIhvcNAQEL
 BQAwQTEhMB8GA1UEAwwYR2FtbWEgVHJ1c3QgQ29tbXVuaXR5IENBMRwwGgYDVQQK
-DBNHYW1tYSBUcnVzdCBOZXR3b3JrMB4XDTI2MDYxMDE1MjkzNVoXDTI2MDkwODE1
-MjkzNVowKjERMA8GA1UEAwwIQlAgQnVkZHkxFTATBgNVBAoMDEJQIEJ1ZGR5IElu
-YzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMviEHyvlKYLxjJFS93p
-BS+/tqC81uKmKawdDxegHhGilnH4P3h5oncepCr8+qUL045HMOmxdOYa2GdnznYj
-ixzkSl1l+dRtMwGmEGsvBNcx2GUm2cruJtJZMN/8ZQdrPupQW3kjBDLtzDT39jaW
-JFLrQEqIJ3Pa3q+18IfjSlTLWpALJy+KEcVJ9deDJU6VOoJn4kBqFHBc5NxjsxCe
-eaGyXW7u4mA3eXNKue4tMWIb6glv4SJydclJoypmeqdfgw//26H5C++LKwj2QsYJ
-dIyXwd9mAKSW+Y1zgosD/jaSNC8vzASrLDiipyDaqzohaLPr6s0lH9RJouD+8HPO
-K8kCAwEAAaNmMGQwIgYDVR0RBBswGYYXaHR0cHM6Ly9icGJ1ZGR5LmV4YW1wbGUw
-HQYDVR0OBBYEFA2FH4Jwk6aPnthL5Nk5VOFY9RzGMB8GA1UdIwQYMBaAFDPoNX8F
-74ruONJnXXX3sPaC7c6DMA0GCSqGSIb3DQEBCwUAA4IBAQB5LfCMiZ8UepCXto1H
-lZ9bA9IHXqKEQ/WKv5da456z3hKOckXJl9LQrdrPO0qqm6UdZtgQMLxrIa4DCGte
-/fVhZpdoAxUjpmn4oSmjFbPX/6zmwocVKMBc3MmbQPSG00KMTalg9sPFzYwjSz9m
-ZYyzvG5EoDW8gvpXHjilWg+HSPjLNSDrxeXRSlSmFJHo8PBuotZ15GEiCXPqANFR
-x0k76fcqvdOsLVFJnj1aJ/6QTMFKGua7Ffz73HrDwso83dnkTIOFEIg1ailddk7+
-LKm6NaOC6Yf08ek0lO5pYN0CQXp0vVEveM/HxuR6BZjA9qV4XThPV7QVn+X9QUVH
-N+ff
+DBNHYW1tYSBUcnVzdCBOZXR3b3JrMB4XDTI2MDYxMTE3MTkxMloXDTI2MDkwOTE3
+MTkxMlowKjERMA8GA1UEAwwIQlAgQnVkZHkxFTATBgNVBAoMDEJQIEJ1ZGR5IElu
+YzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAOIyv0fCsn5pcrE4Mazh
+trCWjKEo9rUrBicaMN5F68r22xguLvbOQG4rtyIhap+lq9JNkIlvNEOmQgw15K+8
+CEt1sX3X95bCsqeE2oKsrdHKNE22890H9WLfnneQAXvV91WFRkD97eGElouE/QzP
+4qTeP0faUsesXMJcdd5oYD1+hROuaTjqvsxaTwa/NNRWVd+KpbugxbSeReMjMDV5
+F/EnqiopTURK/7j1M+6UTQBIu5Bwyw/1S6E0YzE89UqYVtGRZ2MvjknC29difZo3
+1wwFtfasYOgFFeVcar0bbT9iVSssmVPN4ymtsY5Pyp9j0pViYzsTK4XS8Qbh/74X
+dDsCAwEAAaNmMGQwIgYDVR0RBBswGYYXaHR0cHM6Ly9icGJ1ZGR5LmV4YW1wbGUw
+HQYDVR0OBBYEFKctikxrmQgofTO/And9x4Jj5ihkMB8GA1UdIwQYMBaAFBJ5vcH0
+fTFshPl51JaLZo9owbRaMA0GCSqGSIb3DQEBCwUAA4IBAQARNqfuQ/HDcSKWlbe7
+0wzEr4bsSFuQNKP2QaluLFGaXwKKVn6sioRiKWbqF1kInHzqmNuTTrery9VHyJ17
+APdcmOJxdWQaSb5y5o6dX+8icTJbijoN4ScLfoXWH2vQI84LKt7XxdaAIh02GNZY
+yU5l7P0fYEr53L/A2Epl9+ljUb7hPMu6BpeDtsD/iEwSGY9sucRBoxmi7jgzUpdu
+LTL8gaGzH+ywEaeslwMm3jOOJHm0vpYzfkKg5J1f1EMcNFJutybiUjPOjE7XvO2j
+A4HR10+To9lmMpbGv3kB0DGwMO1a9he7FjS1OWDmmpSS2LxgaAF3V6tJrk/HSiPr
+VF4u
 -----END CERTIFICATE-----
 ```
 
-*Generated 2026-06-10T15:29:34.000Z by [tools/artifact-generator](https://github.com/jmandel/cms-ns/tree/no-home-network/tools/artifact-generator). Keys are throwaway examples; every signature verifies against the keys in [keys-and-trust-anchors](keys-and-trust-anchors.md).*
+*Generated 2026-06-11T17:19:12.000Z by [tools/artifact-generator](https://github.com/jmandel/cms-ns/tree/no-home-network/tools/artifact-generator). Keys are throwaway examples; every signature verifies against the keys in [keys-and-trust-anchors](keys-and-trust-anchors.md).*
