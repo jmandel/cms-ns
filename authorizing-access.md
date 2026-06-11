@@ -31,7 +31,7 @@ Nothing on this page puts an intermediary between the app and the parties it tal
 
 The app finds each network, its registration method, and its endpoints in the National Provider Directory. Each network documents one method, and any method is workable if it operates uniformly across that network's data holders and holds one line: manual steps are acceptable per network, never per data holder. That line is what makes registration scale. However a network runs its front door, the layer behind it is automatic, so when a network adds a data holder, no app does any new work, and when an app registers, it does a bounded amount of work per network rather than per organization. Registration ends with the app holding a client_id that the network's data holders recognize, and with each of them able to resolve the app's keys from its `jwks_uri`.
 
-Three patterns cover the methods networks are likely to document.
+Three patterns cover the methods networks are likely to document. They are examples rather than a closed list: a network can document something else, so long as it operates uniformly across its data holders and keeps manual steps per network only.
 
 ### Through a developer portal
 
