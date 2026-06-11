@@ -10,7 +10,7 @@ The page shows one full flow, then three places where a deployment can do things
 
 | Actor | Role |
 |---|---|
-| **BP Buddy** | Patient-facing app, listed in the Medicare App Library and registered with the networks it uses (see the prerequisites below). |
+| **BP Buddy** | Patient-facing app, listed in the Medicare App Library and registered with the networks it uses (see Registering with each network). |
 | **Maria** | A patient with records at several organizations, identity-proofed once at an IAL2 CSP. |
 | **IAL2 CSP** | CLEAR / ID.me. Proofed Maria once; later sign-ins against that identity are cheap federated authentications, not re-proofing. |
 | **CMS App Library** | Lists vetted patient-facing apps and publishes a signed software statement for each. The statement is the app's identity everywhere on this page. |
@@ -24,9 +24,86 @@ The page shows one full flow, then three places where a deployment can do things
 
 CMS publishes a signed software statement for every active Library app: a short-lived JWT naming the app, its URIs, and its `jwks_uri`, and asserting its Library status ([example](example-artifacts/phase0-software-statement.md)). The statement pins the app's display name under the CMS signature, and it binds the app's keys by URL rather than by value, so the app rotates keys at its own `jwks_uri` without anyone re-issuing anything.
 
-The app also registers with each network it uses, by whatever method that network documents: a developer portal, RFC 7591 dynamic registration presenting the CMS statement ([example](example-artifacts/phase2b-beta-dynreg.md)), or a certificate from the network's trust community. Any method works so long as it holds one line: manual steps are acceptable per network, never per data holder. Registration ends with the app holding a client_id that the network's data holders recognize, and with each of them able to resolve the app's keys from its `jwks_uri`. The full registration walkthrough, with all three methods drawn out, is in [app-connectivity-flows.md](app-connectivity-flows.md).
-
 Nothing on this page puts an intermediary between the app and the parties it talks to. If a deployment ever does, every receiver must learn both identities, the intermediary's and the app's, because the app is what patients recognize and what audit logs name.
+
+---
+
+## Registering with each network
+
+The app finds each network, its registration method, and its endpoints in the National Provider Directory. Each network documents one method, and any method is workable if it operates uniformly across that network's data holders and holds one line: manual steps are acceptable per network, never per data holder. That line is what makes registration scale. However a network runs its front door, the layer behind it is automatic, so when a network adds a data holder, no app does any new work, and when an app registers, it does a bounded amount of work per network rather than per organization. Registration ends with the app holding a client_id that the network's data holders recognize, and with each of them able to resolve the app's keys from its `jwks_uri`.
+
+Three patterns cover the methods networks are likely to document.
+
+### Through a developer portal
+
+A human registers once for the whole network. The portal pre-fills its form from the CMS statement and verifies one signature instead of re-vetting the app; what its ad-hoc verification looks like is the network's business, and the spec should leave it unspecified. A network can also run this pattern with a different front door, forwarding dynamic registration requests from any of its data holders to the central registry and syncing the resulting client out to the rest. [Example](example-artifacts/phase2a-alpha-portal.md).
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Dev as App developer
+    participant Portal as Network developer portal
+    participant CMS as CMS App Library
+    participant NAS as Network registry
+
+    Dev->>Portal: Sign up, paste a link to the app's<br/>CMS software statement (or the statement itself)
+    Portal->>CMS: Fetch the statement
+    Portal->>Portal: Verify CMS signature, library_status = active<br/>Pre-fill app name, URIs, contacts from the statement
+    Portal->>Dev: Ad-hoc verification, per network policy<br/>(e.g. domain-ownership challenge or key-possession proof)
+    Dev-->>Portal: Complete the check
+    Portal->>Dev: Gather any app details not captured in the<br/>CMS statement (e.g. which APIs the app uses)
+    Dev-->>Portal: Provide details
+    Portal->>NAS: Provision registration
+    NAS-->>Dev: client_id (recognized at all participating data holders)
+```
+
+### By dynamic registration at each data holder
+
+The app presents the CMS statement at each data holder's RFC 7591 registration endpoint, and a client library performs the calls in a loop, so the larger count costs nothing manual. The network may run its own onboarding first, with as much manual review as its policy requires, or skip that layer and let the CMS statement carry the decision; its data holders consult the approval signal automatically. The statement pins the app's display name and URIs under the CMS signature, which closes a gap seen in certificate schemes where any credentialed app can register under any name it likes. [Example](example-artifacts/phase2b-beta-dynreg.md).
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant App as BP Buddy
+    participant CMS as CMS App Library
+    participant Net as The network
+    participant DH as Data holder<br/>auth servers
+
+    opt network-level onboarding, per network policy (may be manual, may be skipped)
+        App->>Net: Request onboarding<br/>(link to CMS software statement)
+        Net->>CMS: Fetch and verify the statement
+        Net->>Net: Internal review per network policy<br/>(opaque to apps, possibly manual)
+        Net-->>DH: Approval signal to its data holders: app okayed
+    end
+    App->>CMS: GET the current software-statement.jwt
+    CMS-->>App: software_statement
+    loop for each data holder, automated
+        App->>DH: POST /register (RFC 7591, software_statement)
+        DH->>DH: Verify CMS signature, library_status, key<br/>possession, network approval signal (if any)
+        DH-->>App: client_id at that data holder
+    end
+```
+
+### Through a trust community
+
+The network's community CA issues the app a certificate, with vetting per the network's policy that can lean on the same CMS Library evidence, and UDAP dynamic registration proceeds at each data holder from there. Whoever mandates this flavor is responsible for providing or naming the CA; the network owns that cost and cannot externalize it onto apps or other networks. Issued certificates have to track the app's `jwks_uri` automatically (see Keys over time below). [Example](example-artifacts/phase2c-gamma-udap.md).
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant App as BP Buddy
+    participant CA as Trust-community CA
+    participant DH as Data holder<br/>auth servers
+
+    Note over App,CA: One-time per-network step (may be manual)
+    App->>CA: Certificate request (community vetting per<br/>network policy, leaning on the same<br/>CMS Library evidence)
+    CA-->>App: X.509 certificate
+    loop for each data holder, automated
+        App->>DH: UDAP dynamic registration<br/>(RFC 7591, software statement signed with X.509 key)
+        DH->>DH: Validate chain to the community CA
+        DH-->>App: client_id at that data holder
+    end
+```
 
 ---
 
