@@ -18,19 +18,50 @@ The page shows one full story, then the three places it can be assembled differe
 
 ---
 
-## The core story
+## The shape of every assembly
 
-![The core story: authorization step at a shared service, per-site tickets, redemption at each data holder](authorizing-access-core.svg)
+Five facts must become true before data flows, in whatever order and by whatever parties a deployment chooses. Three of them can be established more than one way:
+
+![Five facts: app known, Maria known at IAL2, grant captured, records located, each data holder issues its own token — with choice points on the last three](authorizing-access-logical.svg)
+
+## The core story, mechanically
+
+One instantiation — the filled chips above, with a shared authorization service in the path:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Maria
+    participant App as BP Buddy
+    participant CSP as IAL2 CSP
+    participant SAS as Shared authorization service
+    participant DH as Data holders (each one)
+
+    App->>CSP: sends Maria to sign in<br/>(the app is the CSP's relying party, as today)
+    CSP-->>App: IAL2 id_token
+    App->>SAS: opens the authorization step<br/>(code flow with PKCE, carrying the id_token as a hint)
+    SAS->>CSP: silent re-authentication via id_token_hint<br/>(no screen if Maria's CSP session is live)
+    CSP-->>SAS: fresh id_token, audienced to the service
+    SAS->>SAS: record location lookup: its own network,<br/>plus peer networks it has agreements with
+    SAS->>Maria: shows the matches<br/>Maria narrows sites and data categories
+    SAS-->>App: token response: per-site permission tickets<br/>+ endpoint hints
+    loop for each site Maria chose
+        App->>DH: redeems that site's ticket<br/>(app key + ticket, RFC 8693)
+        DH-->>App: access token + matched patient id
+        App->>DH: FHIR queries
+    end
+```
 
 Walking it through:
 
-1. BP Buddy sends Maria to the shared authorization service's authorization step — a standard SMART App Launch code flow with PKCE. The request carries the app's Library-backed identity, so the service knows exactly which app is asking without any prior relationship.
-2. The service signs Maria in by federating to her IAL2 CSP, passing an `id_token_hint`. If her CSP browser session is live, this is silent: no screen, no re-proofing, a fresh id_token audienced to the service at the marginal cost of a federated login. (The proofing cost was paid once, by whoever first verified her. Whether ecosystem re-authentication is priced at zero is a CSP participation-terms question worth exploring, not an architecture question.)
-3. The service looks up where Maria has records: its own network's data holders, plus peer networks it has agreements with. The patient-facing screen is the right place for this lookup to live, because whoever presents the choices needs to know what the choices are.
-4. Maria sees the matches and narrows them: which sites, which data categories. Sites she leaves out are never disclosed to the app — not as hints, not as tickets.
-5. The token response back to the app carries one signed permission ticket per chosen site plus endpoint hints ([SMART Permission Tickets, proposal 003](https://build.fhir.org/ig/jmandel/smart-permission-tickets-wip/proposal-003-smart-launch-issuance.html); [example response](example-artifacts/issuance-token-response.md)). Each ticket binds the grant: Maria's demographics, her identity evidence, the authorized scope, the site it is for, and the app's key.
-6. At each data holder, the app presents its key and that site's ticket (RFC 8693 token exchange). The data holder verifies the ticket signature, independently verifies the identity evidence inside it, runs its own patient match, applies its own policy, and issues its own access token with the matched patient id ([example ticket](example-artifacts/permission-ticket.md)).
-7. FHIR queries proceed with each data holder's token. A still-valid ticket can be re-presented for a fresh token; expired tickets are renewed at the service with a refresh token, without re-running the ceremony.
+1. BP Buddy signs Maria in at her IAL2 CSP itself, exactly as it does today: the app is the CSP's relying party and bears the proofing relationship. (The proofing cost was paid once; later sign-ins against that identity are cheap federated authentications.)
+2. The app opens the authorization step at the shared authorization service — a standard SMART App Launch code flow with PKCE — already holding Maria's id_token, which it passes as a hint. The request also carries the app's Library-backed identity, so the service knows exactly which app is asking without any prior relationship.
+3. The service re-authenticates Maria silently against the CSP using the hint: no screen if her CSP session is live, no re-proofing ever, and the service receives a fresh id_token audienced to itself. (Whether ecosystem re-authentication is priced at zero is a CSP participation-terms question worth exploring, not an architecture question.)
+4. The service looks up where Maria has records: its own network's data holders, plus peer networks it has agreements with. The patient-facing screen is the right place for this lookup to live, because whoever presents the choices needs to know what the choices are.
+5. Maria sees the matches and narrows them: which sites, which data categories. Sites she leaves out are never disclosed to the app — not as hints, not as tickets.
+6. The token response back to the app carries one signed permission ticket per chosen site plus endpoint hints ([SMART Permission Tickets, proposal 003](https://build.fhir.org/ig/jmandel/smart-permission-tickets-wip/proposal-003-smart-launch-issuance.html); [example response](example-artifacts/issuance-token-response.md)). Each ticket binds the grant: Maria's demographics, her identity evidence, the authorized scope, the site it is for, and the app's key.
+7. At each data holder, the app presents its key and that site's ticket (RFC 8693 token exchange). The data holder verifies the ticket signature, independently verifies the identity evidence inside it, runs its own patient match, applies its own policy, and issues its own access token with the matched patient id ([example ticket](example-artifacts/permission-ticket.md)).
+8. FHIR queries proceed with each data holder's token. A still-valid ticket can be re-presented for a fresh token; expired tickets are renewed at the service with a refresh token, without re-running the authorization step.
 
 There is no `$rls` call by the app anywhere in this story: record location happened inside the authorization step, and the app received its answer as tickets.
 
@@ -91,7 +122,7 @@ The data holder's verification work is nearly identical either way — client ke
 
 ## How Maria signs in (within ①)
 
-The core story federates the CSP into the authorization step with an `id_token_hint`, which yields a fresh, service-audienced assertion that the person in this browser is Maria. The lighter assembly has the app pass its own IAL2 id_token as the sign-in. That token is automatically verifiable and audience-bound to the app, and accepting it is the same trust model the `cms_smart` flow already runs on — so it is an honest option, provided it is named for what it is: it proves the app holds a recent assertion about Maria, not that Maria is present in this browser. A service accepting it should say so rather than implying a separation it does not deliver.
+In the core story the app signed Maria in at the CSP and the service re-authenticates her silently with an `id_token_hint`, which yields a fresh, service-audienced assertion that the person in this browser is Maria. The lighter assembly skips the re-authentication: the service accepts the app-passed IAL2 id_token itself as the sign-in. That token is automatically verifiable and audience-bound to the app, and accepting it is the same trust model the `cms_smart` flow already runs on — so it is an honest option, provided it is named for what it is: it proves the app holds a recent assertion about Maria, not that Maria is present in this browser. A service accepting it should say so rather than implying a separation it does not deliver.
 
 ---
 
