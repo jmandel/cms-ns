@@ -76,7 +76,11 @@ fetch(SOURCE).then(r => {
   return r.text();
 }).then(async md => {
   document.getElementById('content').innerHTML = marked.parse(md);
-  await mermaid.run({ querySelector: '.mermaid' });
+  let i = 0;
+  for (const el of document.querySelectorAll('.mermaid')) {
+    const { svg } = await mermaid.render('mmd-' + (i++), el.textContent);
+    el.innerHTML = svg;
+  }
 }).catch(e => {
   document.getElementById('content').innerHTML =
     '<p>Could not load <code>' + SOURCE + '</code> (' + e.message + '). <a href="' + SOURCE + '">View raw</a>.</p>';
