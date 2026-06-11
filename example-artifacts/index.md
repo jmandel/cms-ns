@@ -26,4 +26,4 @@
 - [Phase 4b — Federated retrieval at Lakeside Clinic (Beta; Gamma is identical)](phase4b-federated.md)
 - [Phase 5 — Key rotation](phase5-key-rotation.md)
 
-*Generated 2026-06-11T22:51:12.000Z by [tools/artifact-generator](https://github.com/jmandel/cms-ns/tree/no-home-network/tools/artifact-generator).*
+*Generated 2026-06-11T23:38:56.000Z by [tools/artifact-generator](https://github.com/jmandel/cms-ns/tree/no-home-network/tools/artifact-generator).*

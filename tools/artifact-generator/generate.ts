@@ -823,7 +823,7 @@ const SAS_CSP_CLIENT = "https://issuer.beta-exchange.example"; // the service's 
 writePage(
   "csp-sign-in",
   "The app signs Maria in at the CSP",
-  "BP Buddy is the CSP's relying party, exactly as today. The id_token it receives carries the app's canonical Library identifier as its audience, which is what lets any later verifier resolve the token to this app.",
+  "BP Buddy is the CSP's relying party. The id_token it receives carries the app's canonical Library identifier as its audience, which is what lets any later verifier resolve the token to this app.",
   [
     httpMd("Authorize request (browser redirect to the CSP)", [
       `GET ${CSP_ISS}/authorize?response_type=code HTTP/1.1`,

@@ -49,7 +49,7 @@ sequenceDiagram
     participant SAS as Shared authorization service
     participant DH as Data holders (each one)
 
-    App->>CSP: sends Maria to sign in<br/>(the app is the CSP's relying party, as today)
+    App->>CSP: sends Maria to sign in<br/>(the app is the CSP's relying party)
     CSP-->>App: IAL2 id_token
     App->>SAS: opens the authorization step<br/>(code flow with PKCE, carrying the id_token as a hint)
     SAS->>CSP: silent re-authentication via id_token_hint<br/>(no screen if Maria's CSP session is live)
@@ -66,7 +66,7 @@ sequenceDiagram
 
 Walking it through:
 
-1. BP Buddy signs Maria in at her IAL2 CSP itself, exactly as it does today: the app is the CSP's relying party and bears the proofing relationship. (The proofing cost was paid once; later sign-ins against that identity are cheap federated authentications.) [Example](example-artifacts/csp-sign-in.md).
+1. BP Buddy signs Maria in at her IAL2 CSP itself: the app is the CSP's relying party and bears the proofing relationship. (The proofing cost was paid once; later sign-ins against that identity are cheap federated authentications.) [Example](example-artifacts/csp-sign-in.md).
 2. The app opens the authorization step at the shared authorization service (a standard SMART App Launch code flow with PKCE), already holding Maria's id_token, which it passes as a hint. The request also carries the app's Library-backed identity, so the service knows exactly which app is asking without any prior relationship. [Example](example-artifacts/authorization-step.md).
 3. The service re-authenticates Maria silently against the CSP using the hint: no screen if her CSP session is live, no re-proofing ever, and the service receives a fresh id_token audienced to itself. (Whether ecosystem re-authentication is priced at zero is a CSP participation-terms question worth exploring, not an architecture question.)
 4. The service looks up where Maria has records: its own network's data holders, plus peer networks it has agreements with. The patient-facing screen is the right place for this lookup to live, because whoever presents the choices needs to know what the choices are. [Example](example-artifacts/peer-record-location.md).
@@ -156,7 +156,7 @@ One dependency: if the grant is app-asserted (①), then site narrowing happens 
 - **Site-relationship privacy.** The existence of a care relationship is disclosed only as far as Maria chooses, which only service-side selection can deliver.
 - **Single-place revocation.** Maria revokes the grant where she made it, and the revocation reaches every credential derived from it, instead of hunting through per-app and per-portal switches.
 - **An audit story that names the app.** The ticket records which app Maria authorized; that is what data holders log and what she will recognize later.
-- **Incremental federation.** A service that today shows its own network's matches can add peer networks as agreements form. The patient's stops shrink from many toward one without any flag-day.
+- **Incremental federation.** A service that shows its own network's matches can add peer networks as agreements form. The patient's stops shrink from many toward one, with no flag day.
 
 ## Keys over time
 

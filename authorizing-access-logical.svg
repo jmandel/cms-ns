@@ -22,7 +22,7 @@
     <text x="283" y="178" text-anchor="middle" font-size="14" font-weight="600">Maria is known</text>
     <text x="283" y="196" text-anchor="middle" font-size="14" font-weight="600">at IAL2</text>
     <text x="283" y="224" text-anchor="middle" font-size="11.5" fill="#555">the app sends her</text>
-    <text x="283" y="239" text-anchor="middle" font-size="11.5" fill="#555">to the CSP, as today</text>
+    <text x="283" y="239" text-anchor="middle" font-size="11.5" fill="#555">to the CSP</text>
   </g>
 
   <text x="385" y="186" text-anchor="middle" font-size="10.5" fill="#777">id_token</text>
