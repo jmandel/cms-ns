@@ -14,4 +14,4 @@
 - [Phase 5 — Key rotation](phase5-key-rotation.md)
 - [Keys and trust anchors](keys-and-trust-anchors.md)
 
-*Generated 2026-06-11T17:19:12.000Z by [tools/artifact-generator](https://github.com/jmandel/cms-ns/tree/no-home-network/tools/artifact-generator).*
+*Generated 2026-06-11T19:17:34.000Z by [tools/artifact-generator](https://github.com/jmandel/cms-ns/tree/no-home-network/tools/artifact-generator).*

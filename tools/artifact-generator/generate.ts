@@ -414,7 +414,7 @@ const idToken = await new SignJWT({
   .setProtectedHeader({ alg: "RS256", kid: cspKey.jwk.kid, typ: "JWT" })
   .setIssuer(CSP_ISS)
   .setSubject(uuid())
-  .setAudience("bp-buddy-idme-client")
+  .setAudience(CMS_APP_ID)
   .setIssuedAt(now - 60)
   .setExpirationTime(now + 240)
   .setJti(uuid())
@@ -442,7 +442,11 @@ writePage(
   "Phase 3 — Patient-bound token and $rls at Beta",
   "Maria authenticated at her IAL2 CSP moments ago; her id_token travels inside the cms_smart extension of the client_assertion, following the Blue Button CMS Aligned Networks pattern. The access token comes back bound to her, so $rls can only locate her records.",
   [
-    jwtMd("CSP-issued IAL2 id_token (ID.me-style claims)", idToken),
+    [
+      jwtMd("CSP-issued IAL2 id_token (ID.me-style claims)", idToken),
+      "",
+      "The `aud` is the app's canonical Library identifier: the app configures its CSP registration so id_tokens carry its `software_id`. Any network or data holder can then verify the relationship between the id_token's audience and the presenting application (can-spec §9) by matching `aud` against the `software_id` it bound at registration — the identifiers are literally identical, no directory needed.",
+    ].join("\n"),
     httpMd(
       "Token request",
       [`POST ${BETA_RLS_TOKEN} HTTP/1.1`, "Host: rls.beta-exchange.example", "Content-Type: application/x-www-form-urlencoded"],
@@ -562,12 +566,31 @@ writePage(
 // =====================================================================
 // Permission-ticket alternative (Phase 3 evolution)
 // =====================================================================
+const TICKET_ISSUER = "https://issuer.beta-exchange.example";
+// T1 evidence: the issuer ran the CSP sign-in as relying party during the
+// issuance ceremony, so the id_token's aud names the ticket issuer.
+const ticketEvidence = await new SignJWT({
+  identity_assurance_level: 2,
+  auth_time: now - 30,
+  given_name: "Maria",
+  family_name: "Lopez",
+  birthdate: "1962-03-15",
+})
+  .setProtectedHeader({ alg: "RS256", kid: cspKey.jwk.kid, typ: "JWT" })
+  .setIssuer(CSP_ISS)
+  .setSubject(uuid())
+  .setAudience(TICKET_ISSUER)
+  .setIssuedAt(now - 30)
+  .setExpirationTime(now + 270)
+  .setJti(uuid())
+  .sign(cspKey.privateKey);
+
 const permissionTicket = await new SignJWT({
   ticket_type: "patient-self-access-v1",
   subject: {
     patient: { name: [{ family: "Lopez", given: ["Maria"] }], birthDate: "1962-03-15" },
   },
-  subject_identity_evidence: idToken,
+  subject_identity_evidence: ticketEvidence,
   presenter_binding: { jkt: appKeyA.jwk.kid },
   access: {
     permissions: [{ resource_type: "Observation", interactions: ["read", "search"] }],
@@ -575,7 +598,7 @@ const permissionTicket = await new SignJWT({
   },
 })
   .setProtectedHeader({ alg: "ES256", kid: ticketIssuerKey.jwk.kid, typ: "JWT" })
-  .setIssuer("https://issuer.beta-exchange.example")
+  .setIssuer(TICKET_ISSUER)
   .setAudience(LAKESIDE_FHIR)
   .setIssuedAt(now)
   .setExpirationTime(now + 3600)
@@ -590,7 +613,7 @@ writePage(
     [
       jwtMd("Permission ticket — note subject demographics, the embedded IAL2 id_token as subject_identity_evidence, and the presenter binding to the app's key", permissionTicket),
       "",
-      "The `subject_identity_evidence` value is the same CSP-issued id_token shown in [phase3-rls](phase3-rls.md); the data holder verifies its signature against the CSP's keys itself rather than taking the issuer's word for it. `presenter_binding.jkt` is the thumbprint of the app key in [keys-and-trust-anchors](keys-and-trust-anchors.md).",
+      "The `subject_identity_evidence` is a CSP-signed id_token whose `aud` names the ticket issuer: the issuer ran the CSP sign-in as relying party during the issuance ceremony. The data holder verifies the evidence's signature against the CSP's keys itself (evidence-issuer trust is configured separately from ticket-issuer trust) and resolves the evidence's client identifier to the ticket issuer. `presenter_binding.jkt` is the thumbprint of the app key in [keys-and-trust-anchors](keys-and-trust-anchors.md).",
     ].join("\n"),
     httpMd(
       "Redemption — RFC 8693 token exchange at the data holder",
