@@ -29,9 +29,9 @@ Nothing on this page puts an intermediary between the app and the parties it tal
 
 ## Registering with each network
 
-The app finds each network, its registration method, and its endpoints in the National Provider Directory. Each network documents one method, and any method is workable if it operates uniformly across that network's data holders and holds one line: manual steps are acceptable per network, never per data holder. That line is what makes registration scale. However a network runs its front door, the layer behind it is automatic, so when a network adds a data holder, no app does any new work, and when an app registers, it does a bounded amount of work per network rather than per organization. Registration ends with the app holding a client_id that the network's data holders recognize, and with each of them able to resolve the app's keys from its `jwks_uri`.
+The app finds each network, its registration method, and its endpoints in the National Provider Directory. Each network documents one method, and any method is workable if it meets two requirements. It has to operate uniformly across that network's data holders, with manual steps acceptable per network but never per data holder. And it must not add to an app's cost of participating in individual access: if the method involves certificates or other credentials, the network sees to it that apps can get them without paying. The first requirement is what makes registration scale. However a network runs its front door, the layer behind it is automatic, so when a network adds a data holder, no app does any new work, and when an app registers, it does a bounded amount of work per network rather than per organization. Registration ends with the app holding a client_id that the network's data holders recognize, and with each of them able to resolve the app's keys from its `jwks_uri`.
 
-Three patterns cover the methods networks are likely to document. They are examples rather than a closed list: a network can document something else, so long as it operates uniformly across its data holders and keeps manual steps per network only.
+Three patterns cover the methods networks are likely to document. They are examples rather than a closed list: a network can document something else, so long as it meets the same two requirements.
 
 ### Once per network, through a developer portal
 
@@ -85,7 +85,7 @@ sequenceDiagram
 
 ### At each data holder, presenting a community-issued certificate
 
-The network's community CA issues the app a certificate, with vetting per the network's policy that can lean on the same CMS Library evidence, and UDAP dynamic registration proceeds at each data holder from there. Whoever mandates this flavor is responsible for providing or naming the CA; the network owns that cost and cannot externalize it onto apps or other networks. Issued certificates have to track the app's `jwks_uri` automatically (see Keys over time below). [Example](example-artifacts/phase2c-gamma-udap.md).
+The network's community CA issues the app a certificate, with vetting per the network's policy that can lean on the same CMS Library evidence, and UDAP dynamic registration proceeds at each data holder from there. Certificate processes are where costs most often creep in, so the second requirement above bears repeating: a network that chooses a CA-based flow makes sure that getting certificates adds nothing to an app's cost of participating in individual access. Issued certificates have to track the app's `jwks_uri` automatically (see Keys over time below). [Example](example-artifacts/phase2c-gamma-udap.md).
 
 ```mermaid
 sequenceDiagram
