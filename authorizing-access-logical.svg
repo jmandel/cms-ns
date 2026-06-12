@@ -25,8 +25,8 @@
   <text x="504" y="214" font-size="10.5" fill="#777">id_token</text>
 
   <!-- lanes -->
-  <rect x="180" y="250" width="280" height="250" rx="20" fill="#eaf3fb" stroke="#0072b2" stroke-width="1.4"/>
-  <rect x="480" y="250" width="280" height="250" rx="20" fill="#fdf5e3" stroke="#cc8400" stroke-width="1.4"/>
+  <rect x="180" y="250" width="280" height="250" rx="20" fill="#e1eef9" stroke="#0072b2" stroke-width="1.4"/>
+  <rect x="480" y="250" width="280" height="250" rx="20" fill="#faf0d8" stroke="#b97800" stroke-width="1.4"/>
 
   <!-- caps -->
   <rect x="192" y="258" width="256" height="26" rx="13" fill="#0072b2"/>
@@ -38,8 +38,8 @@
   <g opacity="0.25">
     <line x1="196" y1="360" x2="444" y2="360" stroke="#0072b2"/>
     <line x1="196" y1="430" x2="444" y2="430" stroke="#0072b2"/>
-    <line x1="496" y1="360" x2="744" y2="360" stroke="#cc8400"/>
-    <line x1="496" y1="430" x2="744" y2="430" stroke="#cc8400"/>
+    <line x1="496" y1="360" x2="744" y2="360" stroke="#b97800"/>
+    <line x1="496" y1="430" x2="744" y2="430" stroke="#b97800"/>
   </g>
 
   <!-- Maria-decides dotted box across rows 1-2 -->
