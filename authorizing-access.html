@@ -48,6 +48,12 @@
   .band-o { background: #fdf9f0; border: 1px solid #f0e0c2; }
   .band-b .mermaid { background: #f3f8fc; border-color: #cfe3f3; }
   .band-o .mermaid { background: #fdf9f0; border-color: #f0e0c2; }
+  @media (min-width: 1700px) {
+    .paths-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;
+      width: min(1660px, 96vw); margin-left: calc(50% - min(830px, 48vw)); }
+    .paths-row .band-b, .paths-row .band-o { margin: 0; }
+    .paths-row .mermaid { width: auto; max-width: 100%; margin-left: 0; }
+  }
   .dm .g { background: #ddf0e0; border-left: 4px solid #15803d; }
   .dm .y { background: #fdeec9; border-left: 4px solid #b45309; }
   .dm .r { background: #f6d2d2; border-left: 4px solid #b91c1c; }
@@ -116,6 +122,14 @@ fetch(SOURCE).then(r => {
   }
   band('The permission-ticket flow', 'Choice point', 'band-b');
   band('Choice point: who records the grant', 'Comparing the paths', 'band-o');
+  const bb = document.querySelector('.band-b'), bo = document.querySelector('.band-o');
+  if (bb && bo) {
+    const row = document.createElement('div');
+    row.className = 'paths-row';
+    bb.parentNode.insertBefore(row, bb);
+    row.appendChild(bb);
+    row.appendChild(bo);
+  }
 }).catch(e => {
   document.getElementById('content').innerHTML =
     '<p>Could not load <code>' + SOURCE + '</code> (' + e.message + '). <a href="' + SOURCE + '">View raw</a>.</p>';
