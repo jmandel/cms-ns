@@ -129,8 +129,8 @@ fetch(SOURCE).then(r => {
     if (cur.length) chunks.push(cur);
     return chunks;
   }
-  const blue = chunksBy(collect('The permission-ticket flow', 'Choice point'), 'H3');
-  const orange = chunksBy(collect('Choice point: who records the grant', 'Comparing the paths'), 'H2');
+  const blue = chunksBy(collect('The permission-ticket flow', 'The client-assertion flow'), 'H3');
+  const orange = chunksBy(collect('The client-assertion flow', 'Comparing the paths'), 'H3');
   if (blue.length && orange.length) {
     const row = document.createElement('div');
     row.className = 'paths-row';

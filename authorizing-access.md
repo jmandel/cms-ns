@@ -143,11 +143,11 @@ Credentials that a network or a trust community issues to the app (the certifica
 
 ---
 
-## The permission-ticket flow, step by step
+## The permission-ticket flow
 
 This expands the blue path from the figure. A shared authorization service captures the grant: a party trusted by the network to do so, though not necessarily operated by it. It may be the network's own service, a portal vendor, or another party the network's data holders recognize, and it can run record location lookups against its own network and against peer networks it has agreements with.
 
-### Reaching the service
+### Signing Maria in
 
 ```mermaid
 sequenceDiagram
@@ -159,25 +159,27 @@ sequenceDiagram
     App->>CSP: sends Maria to sign in<br/>(the app is the CSP's relying party)
     CSP-->>App: IAL2 id_token
     App->>SAS: opens the authorization step<br/>(code flow with PKCE, carrying the id_token as a hint)
+    SAS->>CSP: silent re-authentication via id_token_hint<br/>(no screen if Maria's CSP session is live)
+    CSP-->>SAS: fresh id_token, audienced to the service
 ```
 
 *Example artifacts: [the CSP sign-in](example-artifacts/csp-sign-in.md) and [opening the authorization step](example-artifacts/authorization-step.md).*
 
 1. BP Buddy signs Maria in at her IAL2 CSP itself: the app is the CSP's relying party and bears the proofing relationship. (The proofing cost was paid once; later sign-ins against that identity are cheap federated authentications.)
 2. The app opens the authorization step at the shared authorization service (a standard SMART App Launch code flow with PKCE), already holding Maria's id_token, which it passes as a hint. The request also carries the app's Library-backed identity, so the service knows exactly which app is asking without any prior relationship.
+3. The service re-authenticates Maria silently against the CSP using the hint: no screen if her CSP session is live, no re-proofing ever, and the service receives a fresh id_token audienced to itself. (Whether ecosystem re-authentication is priced at zero is a CSP participation-terms question worth exploring, not an architecture question.)
 
-### At the service
+A service can also skip the re-authentication and accept the app-passed id_token itself as the sign-in. That token is automatically verifiable and audience-bound to the app, and accepting it is the same trust model the client-assertion flow runs on. It is an honest option provided it is named for what it is: it proves the app holds a recent assertion about Maria, not that Maria is present in this browser. A service accepting it should say so rather than implying a separation it does not deliver.
+
+### Locating her records
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor Maria
     participant App as BP Buddy
-    participant CSP as IAL2 CSP
     participant SAS as Shared authorization service
 
-    SAS->>CSP: silent re-authentication via id_token_hint<br/>(no screen if Maria's CSP session is live)
-    CSP-->>SAS: fresh id_token, audienced to the service
     SAS->>SAS: record location lookup: its own network,<br/>plus peer networks it has agreements with
     SAS->>Maria: shows the matches<br/>Maria narrows sites and data categories
     SAS-->>App: token response: per-site permission tickets<br/>+ endpoint hints
@@ -185,12 +187,11 @@ sequenceDiagram
 
 *Example artifacts: [record location at a peer network](example-artifacts/peer-record-location.md) and [the token response carrying per-site tickets](example-artifacts/issuance-token-response.md).*
 
-3. The service re-authenticates Maria silently against the CSP using the hint: no screen if her CSP session is live, no re-proofing ever, and the service receives a fresh id_token audienced to itself. (Whether ecosystem re-authentication is priced at zero is a CSP participation-terms question worth exploring, not an architecture question.)
 4. The service looks up where Maria has records: its own network's data holders, plus peer networks it has agreements with. The patient-facing screen is the right place for this lookup to live, because whoever presents the choices needs to know what the choices are.
-5. Maria sees the matches and narrows them: which sites, which data categories. Sites she leaves out are never disclosed to the app, either as hints or as tickets.
+5. Maria sees the matches and narrows them: which sites, which data categories. Sites she leaves out are never disclosed to the app, either as hints or as tickets. Service-side selection is the only placement where "the app never learns I was ever there" is achievable.
 6. The token response back to the app carries one signed permission ticket per chosen site plus endpoint hints ([SMART Permission Tickets, proposal 003](https://build.fhir.org/ig/jmandel/smart-permission-tickets-wip/proposal-003-smart-launch-issuance.html)). Each ticket binds the grant: Maria's demographics, her identity evidence, the authorized scope, the site it is for, and the app's key.
 
-### At each data holder
+### Tokens from each data holder
 
 ```mermaid
 sequenceDiagram
@@ -212,13 +213,32 @@ sequenceDiagram
 
 There is no `$rls` call by the app anywhere in this story: record location happened inside the authorization step, and the app received its answer as tickets.
 
-## Choice point: who records the grant
+## The client-assertion flow
 
-The permission-ticket flow establishes the grant at the shared authorization service. The alternative is the flow CMS documents for Blue Button, where the app attests the grant itself:
+This expands the orange path: the flow CMS documents for Blue Button, where the app attests the grant itself. `cms_smart` is the extension it uses ([Blue Button's CMS Aligned Networks flow](https://bluebutton.cms.gov/cms-aligned-networks-documentation/)): a `client_credentials` grant whose signed `client_assertion` carries a `purpose_of_use` (`PATRQT` for patient access) and the patient's IAL2 id_token. "What Maria authorized" rests on the app's own assertion, backed by Library vetting, and Maria never leaves the app. It is the floor the ecosystem already documents. The separation at stake: a shared service recording the grant has no financial stake in the data flowing, while the app receiving the data does, and CMS's own position that a CSP should not learn sites of care draws the same kind of line between roles. Nothing mandates the separation; the matrix below is the accounting.
+
+### Signing Maria in
 
 ```mermaid
 sequenceDiagram
     autonumber
+    participant App as BP Buddy
+    participant CSP as IAL2 CSP
+
+    App->>CSP: sends Maria to sign in<br/>(the app is the CSP's relying party)
+    CSP-->>App: IAL2 id_token<br/>(carried inside every call below)
+```
+
+*Example artifacts: [the CSP sign-in](example-artifacts/csp-sign-in.md).*
+
+The sign-in is identical to the blue path, and it is the only place Maria proves who she is: there is no second stop. The id_token does not stay behind at any service; the app carries it inside every `cms_smart` call it makes from here.
+
+### Locating her records
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Maria
     participant App as BP Buddy
     participant NAS as Network auth server
     participant RLS as Network RLS
@@ -227,41 +247,15 @@ sequenceDiagram
     NAS-->>App: access_token bound to Maria, RLS scope
     App->>RLS: POST Patient/$rls
     RLS-->>App: locations holding Maria's records
-```
-
-*Example artifacts: [the client_credentials token and $rls call](example-artifacts/client-credentials-rls.md).*
-
-`cms_smart` is the extension CMS documents for [Blue Button's CMS Aligned Networks flow](https://bluebutton.cms.gov/cms-aligned-networks-documentation/): a `client_credentials` grant whose signed `client_assertion` carries a `purpose_of_use` (`PATRQT` for patient access) and the patient's IAL2 id_token. `$rls` stands in for a record location operation whose wire shape is still an open question. Here "what Maria authorized" rests on the app's own assertion, backed by Library vetting, and Maria never leaves the app. It is the floor the ecosystem already documents. Choosing it constrains the other two choice points: with no authorization step there is no service-side screen, so narrowing moves into the app, and there are no tickets, so the token request becomes `cms_smart`. The separation at stake here: a shared service recording the grant has no financial stake in the data flowing, while the app receiving the data does. CMS's own position that a CSP should not learn sites of care draws the same kind of line between roles. Nothing mandates the separation; the matrix below is the accounting.
-
-## How Maria signs in (within the grant step)
-
-In the permission-ticket flow, the app signed Maria in at the CSP and the service re-authenticates her silently with an `id_token_hint`, which yields a fresh, service-audienced assertion that the person in this browser is Maria. The lighter option skips the re-authentication: the service accepts the app-passed IAL2 id_token itself as the sign-in. That token is automatically verifiable and audience-bound to the app, and accepting it is the same trust model the `cms_smart` flow already runs on. It is an honest option provided it is named for what it is: it proves the app holds a recent assertion about Maria, not that Maria is present in this browser. A service accepting it should say so rather than implying a separation it does not deliver.
-
----
-
-## Choice point: where Maria narrows sites
-
-In the permission-ticket flow, Maria narrows sites on the service's screen, before the app learns anything. The alternative sends the app everything and lets her narrow the list inside the app:
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Maria
-    participant App as BP Buddy
-    participant SAS as Shared authorization service
-
-    SAS-->>App: tickets + endpoint hints for every match
     App->>Maria: shows every location found
     Maria->>App: deselects sites in the app
 ```
 
-*Example artifacts: [the blanket ticket and the full hint list](example-artifacts/blanket-ticket.md).*
+*Example artifacts: [the client_credentials token and $rls call](example-artifacts/client-credentials-rls.md).*
 
-Maria has the same control over what data flows either way. The difference is what the app learns: with in-app selection the app has already seen every care relationship (the behavioral health clinic, the reproductive health clinic) before Maria chooses. No in-app control can undo that disclosure. Service-side selection is the only placement where "the app never learns I was ever there" is achievable.
+`$rls` stands in for a record location operation whose wire shape is still an open question. Maria has the same control over what data flows as in the blue path. The difference is what the app learns: it has already seen every care relationship (the behavioral health clinic, the reproductive health clinic) before Maria chooses, and no in-app control can undo that disclosure. (The disclosure is the same if a ticket-issuing service skips its own screen and returns everything: [a blanket ticket and the full hint list](example-artifacts/blanket-ticket.md).)
 
-## Choice point: what the app presents at each data holder
-
-In the permission-ticket flow the app presents that site's ticket. The alternative uses the same `cms_smart` call described under the grant choice point:
+### Tokens from each data holder
 
 ```mermaid
 sequenceDiagram
@@ -275,7 +269,7 @@ sequenceDiagram
 
 *Example artifacts: [the cms_smart token request at a data holder](example-artifacts/cms-smart-data-holder.md).*
 
-The data holder's verification work is nearly identical either way: client key against the Library-verified `jwks_uri`, identity evidence, its own patient match. What shifts is the attestation of scope: a ticket carries what an independent party recorded Maria authorizing; the `cms_smart` call carries what the app asserts she authorized. Notably, a deployment can adopt the authorization step while its data holders keep accepting `cms_smart` unchanged; the service's record of the grant exists even where it is not yet presented, which makes this a natural transition stage. Continued access also differs here: on the assertions path, data holders may issue refresh tokens under the can-spec's rolling 90-day window; on the ticket path, a still-valid ticket is simply presented again, and expired tickets are renewed at the service.
+The data holder's verification work is nearly identical to the blue path: client key against the Library-verified `jwks_uri`, identity evidence, its own patient match. What shifts is the attestation of scope: a ticket carries what an independent party recorded Maria authorizing; the `cms_smart` call carries what the app asserts she authorized. Notably, a deployment can adopt the authorization step while its data holders keep accepting `cms_smart` unchanged; the service's record of the grant exists even where it is not yet presented, which makes this a natural transition stage. Continued access also differs: here, data holders may issue refresh tokens under the can-spec's rolling 90-day window; on the ticket path, a still-valid ticket is simply presented again, and expired tickets are renewed at the service.
 
 ## Comparing the paths
 
