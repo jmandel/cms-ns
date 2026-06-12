@@ -23,7 +23,7 @@ The page shows one full flow, then three places where a deployment can do things
 
 Before a data holder releases anything, it has to know the app, know the patient at IAL2, and know what the patient authorized, and someone has to work out where the patient's records are. There are two ways to do the last three steps: with network-based permission tickets (blue) or with app-based client assertions (orange). A deployment can also mix the two, step by step; the table near the end shows the combinations.
 
-![The app joins the ecosystem, the patient verifies her identity, her grant is recorded, her records are located, and each data holder issues its own token, with a blue permission-ticket path and an orange client-assertion path](authorizing-access-logical.svg)
+![The app joins the ecosystem, the patient verifies her identity, someone records her grant and sees where her records are, and each data holder issues its own token, with a blue permission-ticket path and an orange client-assertion path](authorizing-access-logical.svg)
 
 The app joins once per network, before any patient is involved; the next section covers how. Everything after that happens per patient.
 
@@ -163,7 +163,7 @@ There is no `$rls` call by the app anywhere in this story: record location happe
 
 ---
 
-## Choice point: who captures the grant
+## Choice point: who records the grant
 
 The permission-ticket flow establishes the grant at the shared authorization service. The alternative is the flow CMS documents for Blue Button, where the app attests the grant itself:
 
