@@ -31,7 +31,7 @@ The app joins once per network, before any patient is involved; the next section
 
 ## How the app joins the ecosystem
 
-CMS publishes a signed software statement for every active Library app: a short-lived JWT naming the app, its URIs, and its `jwks_uri`, and asserting its Library status ([example](example-artifacts/software-statement.md)). The statement pins the app's display name under the CMS signature, and it binds the app's keys by URL rather than by value, so the app rotates keys at its own `jwks_uri` without anyone re-issuing anything.
+Getting into the Medicare App Library involves identity verification, conformance testing against an open reference kit, certification by a recognized body, and a check that the app controls its `jwks_uri`. From then on, CMS publishes a signed software statement for every active Library app: a short-lived JWT naming the app, its URIs, and its `jwks_uri`, and asserting its Library status ([example](example-artifacts/software-statement.md)). The statement pins the app's display name under the CMS signature, and it binds the app's keys by URL rather than by value, so the app rotates keys at its own `jwks_uri` without anyone re-issuing anything.
 
 Nothing on this page puts an intermediary between the app and the parties it talks to. If a deployment ever does, every receiver must learn both identities, the intermediary's and the app's, because the app is what patients recognize and what audit logs name.
 
@@ -190,7 +190,7 @@ sequenceDiagram
 
 *Example artifacts: [the client_credentials token and $rls call](example-artifacts/client-credentials-rls.md).*
 
-`cms_smart` is the extension CMS documents for [Blue Button's CMS Aligned Networks flow](https://bluebutton.cms.gov/cms-aligned-networks-documentation/): a `client_credentials` grant whose signed `client_assertion` carries a `purpose_of_use` (`PATRQT` for patient access) and the patient's IAL2 id_token. `$rls` stands in for a record location operation whose wire shape is still an open question. Here "what Maria authorized" rests on the app's own assertion, backed by Library vetting, and Maria never leaves the app. It is the floor the ecosystem already documents. Choosing it constrains the other two choice points: with no authorization step there is no service-side screen, so narrowing moves into the app, and there are no tickets, so the token request becomes `cms_smart`.
+`cms_smart` is the extension CMS documents for [Blue Button's CMS Aligned Networks flow](https://bluebutton.cms.gov/cms-aligned-networks-documentation/): a `client_credentials` grant whose signed `client_assertion` carries a `purpose_of_use` (`PATRQT` for patient access) and the patient's IAL2 id_token. `$rls` stands in for a record location operation whose wire shape is still an open question. Here "what Maria authorized" rests on the app's own assertion, backed by Library vetting, and Maria never leaves the app. It is the floor the ecosystem already documents. Choosing it constrains the other two choice points: with no authorization step there is no service-side screen, so narrowing moves into the app, and there are no tickets, so the token request becomes `cms_smart`. The separation at stake here: a shared service recording the grant has no financial stake in the data flowing, while the app receiving the data does. CMS's own position that a CSP should not learn sites of care draws the same kind of line between roles. Nothing mandates the separation; the matrix below is the accounting.
 
 ## Choice point: where Maria narrows sites
 
@@ -228,7 +228,7 @@ sequenceDiagram
 
 *Example artifacts: [the cms_smart token request at a data holder](example-artifacts/cms-smart-data-holder.md).*
 
-The data holder's verification work is nearly identical either way: client key against the Library-verified `jwks_uri`, identity evidence, its own patient match. What shifts is the attestation of scope: a ticket carries what an independent party recorded Maria authorizing; the `cms_smart` call carries what the app asserts she authorized. Notably, a deployment can adopt the authorization step while its data holders keep accepting `cms_smart` unchanged; the service's record of the grant exists even where it is not yet presented, which makes this a natural transition stage.
+The data holder's verification work is nearly identical either way: client key against the Library-verified `jwks_uri`, identity evidence, its own patient match. What shifts is the attestation of scope: a ticket carries what an independent party recorded Maria authorizing; the `cms_smart` call carries what the app asserts she authorized. Notably, a deployment can adopt the authorization step while its data holders keep accepting `cms_smart` unchanged; the service's record of the grant exists even where it is not yet presented, which makes this a natural transition stage. Continued access also differs here: on the assertions path, data holders may issue refresh tokens under the can-spec's rolling 90-day window; on the ticket path, a still-valid ticket is simply presented again, and expired tickets are renewed at the service.
 
 ## How Maria signs in (within the grant step)
 
@@ -238,26 +238,47 @@ In the permission-ticket flow, the app signed Maria in at the CSP and the servic
 
 ## Comparing the paths
 
-Columns are ways of doing it; rows are criteria; cells describe what each looks like from that criterion. The cells are descriptions, not scores: judging which trade-offs matter is the working group's call, and it is easier to agree on what each cell says than on how to color it.
+Rows are criteria; the text in each cell describes what that path looks like from that criterion. The colors are a first pass at scoring: green favorable, amber mixed, rose unfavorable. The text should be uncontroversial; the colors are the debatable part, and debating them is the point.
 
-| | <span class="cp cp-b">network-based permission tickets</span> | <span class="cp cp-o">app-based client assertions</span> | mixed: service-recorded grant, presented as `cms_smart` |
-|---|---|---|---|
-| Who records what Maria agreed to share | a shared authorization service, on its own screen | the app, in its own UI | the service, on its own screen |
-| What the app learns about Maria's care sites | the sites she chose; others are never named to it | every match, before she narrows | the sites she chose |
-| Maria's steps at grant time | one redirect; sign-in usually silent; one screen | none beyond the CSP sign-in inside the app | one redirect, one screen |
-| What each data holder verifies | the ticket signature, the identity evidence inside it, and its own patient match | the app's key, the id_token, and its own patient match | same as assertions |
-| Changes required at data holders | accept RFC 8693 ticket redemption | none; Blue Button documents this call | none |
-| New parties that must exist | a shared authorization service the network trusts | none | a shared authorization service |
-| How Maria revokes | once, at the service; status reaches credentials derived from the ticket | per app, and per data holder | the service's record can be withdrawn, but data holders do not consult it at token time |
-| What the audit trail holds | the ticket itself: which app, which grant, signed | the data holder's log of the app's call and its asserted purpose | the call log, plus the service's separate record |
-| How coverage grows | the service adds peer networks; Maria's stops shrink toward one | the app integrates each network's record location itself | discovery grows like tickets; presentation stays as today |
+<table class="dm">
+<thead><tr><th></th><th class="hb">network-based permission tickets</th><th class="ho">app-based client assertions</th></tr></thead>
+<tbody>
+<tr><th>Who records what Maria agreed to share</th><td class="g">a shared authorization service, on its own screen</td><td class="y">the app, in its own UI, backed by Library vetting</td></tr>
+<tr><th>What the app learns about Maria's care sites</th><td class="g">the sites she chose; others are never named to it</td><td class="r">every match, before she narrows</td></tr>
+<tr><th>Maria's steps at grant time</th><td class="y">one redirect; sign-in usually silent; one screen</td><td class="g">none beyond the CSP sign-in inside the app</td></tr>
+<tr><th>What each data holder verifies</th><td class="g">the ticket signature, the identity evidence inside it, and its own patient match</td><td class="y">the app's key, the id_token, and its own patient match</td></tr>
+<tr><th>Changes required at data holders</th><td class="r">accept RFC 8693 ticket redemption</td><td class="g">none; Blue Button documents this call</td></tr>
+<tr><th>New parties that must exist</th><td class="r">a shared authorization service the network trusts</td><td class="g">none</td></tr>
+<tr><th>How Maria revokes</th><td class="g">once, at the service; status reaches credentials derived from the ticket</td><td class="r">per app, and per data holder</td></tr>
+<tr><th>What the audit trail holds</th><td class="g">the ticket itself: which app, which grant, signed</td><td class="y">the data holder's log of the app's call and its asserted purpose</td></tr>
+<tr><th>How coverage grows</th><td class="g">the service adds peer networks; Maria's stops shrink toward one</td><td class="y">the app integrates each network's record location itself</td></tr>
+</tbody>
+</table>
 
-One dependency still holds: with no authorization step at all (the assertions column), there is no service screen and no tickets, so the other rows of that column follow. Beyond that, a row-by-row mix is workable where the cells say so.
+A transition mix is workable where the cells suggest it: a service-recorded grant presented to data holders as `cms_smart` scores like the assertions column at the data holder rows and like the tickets column everywhere else, which is what makes it a deployment stage rather than a destination.
 
 ## Keys over time
 
-The app's keys live at its `jwks_uri` and rotate there on the app's own schedule. The CMS statement binds the URL, not a key, so rotation needs no re-issuance anywhere ([example](example-artifacts/key-rotation.md)). Any credential a network or a trust community issues to the app has to track the `jwks_uri` automatically; if re-syncing means emailing someone, rotation has turned into a manual per-network step.
+The app's keys live at its `jwks_uri` and rotate there on the app's own schedule. The CMS statement binds the URL, not a key, so rotation needs no re-issuance anywhere: data holders resolve the app's current keys at token time by `kid`, and the app publishes a new key alongside the old for an overlap window, starts signing with the new `kid`, and retires the old one.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant App as BP Buddy
+    participant JWKS as bpbuddy.example/.well-known/jwks.json
+    participant CMS as CMS App Library (monitor)
+    participant DH as Any data holder auth server
+
+    App->>JWKS: Publish key B alongside key A (overlap window)
+    CMS->>JWKS: Routine monitoring (URI still serves a valid JWKS)
+    App->>DH: Token request signed with kid=B
+    DH->>JWKS: Resolve kid=B at the live jwks_uri
+    DH-->>App: access_token (rotation invisible to the trust layer)
+    App->>JWKS: Retire key A after overlap window
+```
+
+*Example artifacts: [key rotation, with the JWKS before and during the overlap window](example-artifacts/key-rotation.md).*
+
+Credentials that a network or a trust community issues to the app (the certificate method above) have to track the `jwks_uri` automatically; if re-syncing means emailing someone, rotation has turned into a manual per-network step.
 
 ---
-
-*Design context.* When a shared authorization service is in the path, several parties are distinct: the CSP that proofs identity, the service that captures authorization, the app that receives data. That distinctness has consequences: the party attesting the grant has no financial stake in the data flowing. CMS's own position that a CSP should not learn sites of care leans the same way. But none of these flows mandates the separation, and the table's rightmost rows collapse the parties deliberately. The table is the honest accounting; deployments choose their row.
