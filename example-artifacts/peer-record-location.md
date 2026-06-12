@@ -1,6 +1,6 @@
 # The service looks up record locations
 
-*Generated example for [app-connectivity-flows.md](../app-connectivity-flows.md). Within its own network the lookup is internal. For peer networks it has agreements with, the service queries their record location endpoints system-to-system. The wire shape is a placeholder; what matters is that the service, not the app, sees the answers.*
+*Worked example for [the record location and data access write-up](../authorizing-access.md). Within its own network the lookup is internal. For peer networks it has agreements with, the service queries their record location endpoints system-to-system. The wire shape is a placeholder; what matters is that the service, not the app, sees the answers.*
 
 **Request to a peer network's record location endpoint**
 
@@ -65,4 +65,4 @@ Content-Type: application/fhir+json
 }
 ```
 
-*Generated 2026-06-12T00:08:28.000Z by [tools/artifact-generator](https://github.com/jmandel/cms-ns/tree/no-home-network/tools/artifact-generator). Keys are throwaway examples; every signature verifies against the keys in [keys-and-trust-anchors](keys-and-trust-anchors.md).*
+*Generated 2026-06-12T00:41:21.000Z by [tools/artifact-generator](https://github.com/jmandel/cms-ns/tree/no-home-network/tools/artifact-generator). Keys are throwaway examples; every signature verifies against the keys in [keys-and-trust-anchors](keys-and-trust-anchors.md).*

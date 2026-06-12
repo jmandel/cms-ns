@@ -1,6 +1,6 @@
 # Keys and trust anchors
 
-*Generated example for [app-connectivity-flows.md](../app-connectivity-flows.md). Every signature in this library verifies against these keys. All material is throwaway, generated for the examples.*
+*Worked example for [the record location and data access write-up](../authorizing-access.md). Every signature in this library verifies against these keys. All material is throwaway, generated for the examples.*
 
 **CMS statement signing JWKS** (published at a CMS well-known location):
 
@@ -10,11 +10,11 @@
     {
       "crv": "P-384",
       "kty": "EC",
-      "x": "A5i68pgGne95Ts2pCua0xT3aG5AOtQAhGng0p2v-MJVlWsyDOLYexAbBzc5LGctg",
-      "y": "6wx0t-tlGnQRP1mDsOkqYOvJKKNgjS10zs70fnjKwHby1XABIr4QLuBkf4GPFrnb",
+      "x": "j8njaHZ4Ckxm0HpKZR2uITBf6LRfVjba4QGlA1vyuTt5bQbnbv-e5hiHt4Ivj-LN",
+      "y": "ciscr68Kzritc_ouKQ3UnejBh-9nVaNlKb8ZZoXZefTBuOTxFHyUFXn3kXWm8Wh4",
       "alg": "ES384",
       "use": "sig",
-      "kid": "4K_VlVqsq0eUQ5g2JyKr4i5Rs1uJnlrzpW_wZoqB_MA"
+      "kid": "2C5mFVv8QmVtgpF1q-B8_Ddw_E8fn0jy8SB7mjIxyd8"
     }
   ]
 }
@@ -30,18 +30,18 @@
     {
       "e": "AQAB",
       "kty": "RSA",
-      "n": "xyfY-Xwh38-rBxkJGU5QcFP4HFny_41ikwgEtFgFggJZT_LsAneh6SCI32ofDsn4aVts9uRjt9Jjt5RLueRtJeTQZjnp5NuTY8y9l2nbay2jeDQyqCw6P67e9vZ0qlgaW4XXECgJ8mvzECbxU84eYx8XpLrkpILz90bOXF-iHYktdh9QQpJQB6FZRFuns5yfTIcLfAVw85aEJ66RXOM14_IFSRSCRqAbgq9caCct8u3WJ00SSlx3uErxc8sK_Uv08Hf0WIobI69PjdRqTVRPF0HyGAQ6CbmlHq412R6GY3UYCrynfSg9wiqOwNF4ogh-W5NQbQSsFFkgSaa_rZDmdQ",
+      "n": "po2n6-CRFZM2WunlOAkN2OSG2sNwsHBqeTh6oi3CNIGPAtcN2P_GAvr8v6BNOHiM4VOHA-GWeWgTHJozijJcHYPNpqJeqlZA8TDzeCVO18_mBAUf3XGIbxUM_bqWN2KB-Za89geKHT1qEsj8u_xJp__Q1vVHRCKykkFdzZmT2vihrg6diQJCe6b7FZB2bAp-MilqveALzZSpwG6gKZwlEU0iSNKUf1SkvX2Z_dmnUU-c-dhx_a1jMQCYi4OB--NGEBsK7nIjAbZl6AkglYyXfEET-DpikZTL8DqfHxD-UdHmflZCoXV9QbwHnqm6b7HdqE8Qt1SLm4jkex0K0ZZGVQ",
       "alg": "RS384",
       "use": "sig",
-      "kid": "5Tibdcu84J2NAVk05fzB38EMQthRFYlPzg3hFxRH01A"
+      "kid": "ZEmTzHnM8NIMGeu04ACckrbxWG_7zhJO3n_va1SvVV0"
     },
     {
       "e": "AQAB",
       "kty": "RSA",
-      "n": "zMKxiunqrV33UyRYdAT8lfp-miKHix_qMU5hNVIs6oRPOdjCNyGkqsnTiuUSuSRQWn7SRmdz7VzPVSXrgk8AbuK7HAU0S_mWgl7qfH0XhPSd-BErQ2pZ5Em4dpluKMtGgNtfEjoZRgR4gWQscjMaiiSf9V-Vp8aRIsCzCEDVXGNVdeq1Dq_bKd09ehtJt6jrGxhtiL3Uvpi0W_57oSkH8XHJaKjJDg0-0eR-2d4aNVjH6KWJ7Cs48vScbaaL3cCcoM5cETMy4BSPu0REKlRHVjJzdOVxzj3nk3SRMbXZOODCbfyuLAE2cKnUPGdp_r14MWwuDjmya0YGGXVYAHAZhw",
+      "n": "6pjo655fDNekVFkFcWBlej172_lsQIEdxzVsYmCXo0RDx_NvNGr327hG8lU_Qj0ESLwp9s-IFKR6oXyMaPZ6FReThCiZK0VoaiTb4rd8m3XKoRmFUQq2olLVBCabdf1pNbxITcZQV3WGLyelfwU8dWzHx0_8Uyrfqqd670OThxKg1gzEKCROTGDvo9po-nn0yUpbJ6tWDCSLH8o7jScFWbrK_l6YQCvZa-_OE3U9yVTcQe7nwcxrS-7ox8YQNRQeYPsYdozxyymvi9ltTx5jKPX0heAuQuOixGVX7-lw_Hx5B3tVw4MID1fsyrE-aoTQInf2GSDjFqF2HMEvKVhaGw",
       "alg": "RS384",
       "use": "sig",
-      "kid": "jhlN2zgTU3grmGGCnS8bprE4AoUUhHmQxk8ZJ45tLG4"
+      "kid": "ivFK-vFRk4QLoYnz4kuBoMLCfuaOR-jKqlOunbeTLP8"
     }
   ]
 }
@@ -57,10 +57,10 @@
     {
       "e": "AQAB",
       "kty": "RSA",
-      "n": "4jHUkJetRzWdhiL5AQ6mu6IWsWiGsQIvfGj3ajRMFTGOJoLST0OhrOz800leIt9P7IpzDPlwCFRGqyIxpiufvAkPVbNn_hpnjTpt82OZvZ_UV49wF2w6RoKFiDE7o3E26Gs729GNlIGxo_sxC1kByw1lOfCGlM-9uzgzEkbkZFsXuoqh8fEjf3dF_WK0M9SVCtA-kXVQqOjaXt4tbGxrz0Ez9CiVoalo57HkG8xA05ezZ04O4T_G_iBmrWlcoBtU0DOWk3l2GwqRNhNrYsaAjbGSBz8wpoH1yzjnJll-e5YRafqn8oRX9ea3RqSBOF4Wtn4uU1o5TpjUGOGo82Tibw",
+      "n": "zJYrQd9h5KLx7xSabKD02WgPEAB0-3s_Bq615lfXs2XPVtBBP1_xmbMMYbR6q2-c8f66oBi9TKPJ2Z7myhZqBjtVtfmNRbF75k3tGBlB4lo_aGaGmK8QtTTgwvRS5-4nQUpLgc5xFyuqf13jK9SIMeanIl7KZqnrBD2wk32atDE5fb9Nq7eM20lIaETdRQCkio_Zhe3xBxW70bBC6Ew2N6wnDZ7eVACsUuLmum8AfyR45rfotdPkT2LUATj6pipwcwuHexp3yiLb6t_cA49PsmZ328t0M9bnWhX3GpalwKfmwyBIub3fipmJ8JW33-84grQ3k2mKxBIr_lYB23pO4Q",
       "alg": "RS256",
       "use": "sig",
-      "kid": "QZ3NHaCvu046wChiyfJzJCPbL-1srd2APKpNR7PrbsM"
+      "kid": "TPXAqWx5y3qLhFUTYGdHkh3FE-_zxG_vcgu7pDJjwKg"
     }
   ]
 }
@@ -76,11 +76,11 @@
     {
       "crv": "P-256",
       "kty": "EC",
-      "x": "CM84qDHls0casuSAnT8Qxgr_zh26J_uPyCguS8qPoX4",
-      "y": "8lqtsSKUr8tF9gM4hSe6SCYU-dAZSsSLnn5F3aYsEeE",
+      "x": "n8nkdDjtL1QDYI7C7Z3oBC943GAFQKDmyAy1m1s5ENA",
+      "y": "jG4Ekt5rprI9DPBWFKtP_gwe8YDbuTS3NTNHjVjcoR4",
       "alg": "ES256",
       "use": "sig",
-      "kid": "4JZeXx1DiE4rYLLwNJ2_7Fc14SpQ3mB4QzkywkEOxLk"
+      "kid": "a9ZrqxJPXGcrxj7a7IWW0ipGlH5CfJ1QZ0YaSgTDT6c"
     }
   ]
 }
@@ -92,25 +92,25 @@
 
 ```
 -----BEGIN CERTIFICATE-----
-MIIDYzCCAkugAwIBAgIUJQJHAY3vkzasQDB061qLaFlTzVkwDQYJKoZIhvcNAQEL
+MIIDYzCCAkugAwIBAgIUeVxt2z8g/pIMerL0nFoF31kngwcwDQYJKoZIhvcNAQEL
 BQAwQTEhMB8GA1UEAwwYR2FtbWEgVHJ1c3QgQ29tbXVuaXR5IENBMRwwGgYDVQQK
-DBNHYW1tYSBUcnVzdCBOZXR3b3JrMB4XDTI2MDYxMjAwMDgyOFoXDTI3MDYxMjAw
-MDgyOFowQTEhMB8GA1UEAwwYR2FtbWEgVHJ1c3QgQ29tbXVuaXR5IENBMRwwGgYD
+DBNHYW1tYSBUcnVzdCBOZXR3b3JrMB4XDTI2MDYxMjAwNDEyMVoXDTI3MDYxMjAw
+NDEyMVowQTEhMB8GA1UEAwwYR2FtbWEgVHJ1c3QgQ29tbXVuaXR5IENBMRwwGgYD
 VQQKDBNHYW1tYSBUcnVzdCBOZXR3b3JrMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A
-MIIBCgKCAQEAyjUKAP7t2l0iBpZrxj6NPshWmxsvRsxSQG3ECJvPvqYoTKurDFhm
-yQVwa03JRN07ODM0eqx3UG+yifOQ4vCzGz3GcgfwGnaDkxUULMgt9UTxhooi1HuO
-qs9sy70oMmuen46O88azCb2CjX4EaBRkIokE4EeRL5vIy3EVNub9zIRguFSqUN/7
-63cGcSLbhAtOr38lm7bZi3h19H1b8DL+2i5/NhXJio1ItmOplUHXkzn+xJEShiMJ
-cn6dmHucf4SMEQ0uN2dF8kG1zlf0LLloX77uyFs/LNK00GYCe5KEpcMr79UjuHVs
-7Gwp5j+zn9qL0/2Yzi2uNc/CDgU7h91IvwIDAQABo1MwUTAdBgNVHQ4EFgQUc0Yi
-btO8ZgpkNRUZFl8eJEsm+IMwHwYDVR0jBBgwFoAUc0YibtO8ZgpkNRUZFl8eJEsm
-+IMwDwYDVR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEANJCvDvOEc7Bp
-F/PbAdQqQyH1KNJTaZAGId8+DLapkCG9Q3nffhT3M+OHI61jfWTv7Z8h+/UA5R/o
-90OnM8EA7SdTfJOHjp/SOsC18Er9gs+EF3VDUJ7/QRoJCUcqY3fyVNCVEthO/4Aj
-ixn+zO8EL24yDgGge8qyrzeodOLz/ZSbXwZSBzOSoCH0okrpCOR1CaUX4IUdj/KN
-rfn23wCarLNehPTmyF9Uilwe4/Z6j4C2FlhrN7kYJf/U04a3ph4wcgYfCzFx2rL4
-z5VBwMxg/XdbP66piYRw7OWcUqxwTq9Sfs9Vohq0o/T7D3YPWs7TJDy6ff9CZ+3u
-2ZYTWmvOCA==
+MIIBCgKCAQEA0macpHZWbrGnHYjcqtlE0Ffc3NYwrZaKwAo7YJnwtckNSs5zxoaw
+sGu34OpLC9WTNKW36BKu0/7Jn9oAqb4Jty8TXcHDeZASU9FnQGyDMnIL/RBlyHT4
+X3tpYmyH+Haf9O/JFNd4MdsQS8awGnooaKKcDa4CdGStGNy2LDbtISDDHO31q6zl
+4r6T4mvqLeyUa1i6F57AqP3auEl8yvQjGvzGcMCgh3lfmm4iZuEaLw56fAxZMX1G
+QEZYeRKYz2aO3LgfvxwcYL5l3NlkocXZt2+e+nTCnCOrlbxpmmXyc4d4qvPlgMgK
+pE20rdClzSjU7brh5nZFm6C6dLZl40zgYQIDAQABo1MwUTAdBgNVHQ4EFgQU03tg
+0Tqic2kxoW1nKLV3iUrgD00wHwYDVR0jBBgwFoAU03tg0Tqic2kxoW1nKLV3iUrg
+D00wDwYDVR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEASEQUM4wNT+9F
+qQJHXXPG/sRAr8ygzh0DOnGiBkNjroCTv3BqStCU86rfjJNtmtEhQO/xk9IY+bPl
+VeOyIQalZg5+jurSUK/Xvc7poQRl8auMpelxN6AkVC9iMMKVjrUWqWsJI90vKow3
+GJ97L23c2FRRwlyP67Jk5gd7g8ugNBTiyDMnK6wWIEVA3oD/Ny2ezL/cUEVw5a7/
+N8Qwcb0hhJRzxFUhAKZJVQAcJM6626/eMl6YJPWIBjSAL0lkYTx11PHPsGkyqSr9
+1KXvntMmfNvg/psE4P4KjDdS9PAO/F60eaeHsItX3YzAdvPZnVwNoToiYwCLlpeH
+mFpmtcNQCQ==
 -----END CERTIFICATE-----
 ```
 
@@ -120,26 +120,26 @@ z5VBwMxg/XdbP66piYRw7OWcUqxwTq9Sfs9Vohq0o/T7D3YPWs7TJDy6ff9CZ+3u
 
 ```
 -----BEGIN CERTIFICATE-----
-MIIDXzCCAkegAwIBAgIURCAb+sJOYYBDF17lsutUD0RwZ6UwDQYJKoZIhvcNAQEL
+MIIDXzCCAkegAwIBAgIUBm0y16OumEmM/u6cm/Q4jFHK3eowDQYJKoZIhvcNAQEL
 BQAwQTEhMB8GA1UEAwwYR2FtbWEgVHJ1c3QgQ29tbXVuaXR5IENBMRwwGgYDVQQK
-DBNHYW1tYSBUcnVzdCBOZXR3b3JrMB4XDTI2MDYxMjAwMDgyOFoXDTI2MDkxMDAw
-MDgyOFowKjERMA8GA1UEAwwIQlAgQnVkZHkxFTATBgNVBAoMDEJQIEJ1ZGR5IElu
-YzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAJ8mxn9KoV/tewFMs8S3
-88aQSPuqKFiBcSyWCQ4phDK/mODUBHJF3t7qj3+oq7HnbE18W5iulc82CSn1xUrj
-FuMUQczojYkp3nUVv4v9gLMFxbDpuj2aJaIIdAn6ZwaIvZ5QHbEl7+1bXaYHReTd
-HgDaUzVsHjZ8GfKuG2GjW4rDkRIKWVOXu9zIi5Z2EJwGs5SJgUQGHgikIbLjTw43
-3JmGTwbIkM7Eul4fZS5xBzj1NudmPiujuU/IPk0Hq+k6c7XB7qmlY8kENV3dvp37
-9rVOmsbQay0UkV/Swl/migmnj1Om3L+Wsrp/jaoE3/AtQZzRGjeukU6FAzsldFkH
-JjsCAwEAAaNmMGQwIgYDVR0RBBswGYYXaHR0cHM6Ly9icGJ1ZGR5LmV4YW1wbGUw
-HQYDVR0OBBYEFFxw/A8ZHl3iWUwdWs5d2ZijZ+AWMB8GA1UdIwQYMBaAFHNGIm7T
-vGYKZDUVGRZfHiRLJviDMA0GCSqGSIb3DQEBCwUAA4IBAQB2hbLY8XDUr82RPR6s
-MNzfKLXS9ynBWM9sF2YLKVrDH0V+4Gtg+eDy5OpvM4bUN2itDCzlDaRzf+u2LKXZ
-mW8vZZpJ17++oYsNsXLdXDOAKNOiA94z0wURaCVMN3i4a2K9E/G2UA/Qxj+vHrP+
-kBRH+7O9cxDFyEj+DU2zUKgzz/jvhNbIwDhsvAT1FcVzl6eqXtCLPv0WdqPqxt9+
-IoQb2poYuho29um3A42Wn7I4LmUDUic6oiWZBFEbzKrB6s9r9u3GFkGy2Ige+wmF
-QFtUVwMbyQx3BrIcu26d2RRodJw0wA37PfeUhQeE2fTauDA/EI219IyWqVbAhCwh
-vP4r
+DBNHYW1tYSBUcnVzdCBOZXR3b3JrMB4XDTI2MDYxMjAwNDEyMVoXDTI2MDkxMDAw
+NDEyMVowKjERMA8GA1UEAwwIQlAgQnVkZHkxFTATBgNVBAoMDEJQIEJ1ZGR5IElu
+YzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALEbqoubgcry5YpiZw3I
+EKI4lF3UWXo275mWVpmodUCXVRTtDnHUE6Q25PXW9OxAzIX25cZz9H8UFT6ZNpPu
+Ob/TBI1vLyWRVazFphqlIhj7T3/B54sXMbiFNRplWINzNs0wOGQQXTTrmDvXokjr
+aDkgfU28NcgIuJLoE4onBHsZB6vEhfTyS4AQiriovZ8hP768+Xvz9nI/Kcmx1tAG
+IZwNZ2dwjXnnkaDYMt1HH7q1j8pQ1Iac1zxy/QqB/Adr1GpbZVsNiAuuuC/2rOdQ
+Eke+XzahKNgIdpwIG7EV1Mh4s1y0Q1voIYOs+1nqMd0kCthufgyufn1yMlPRsdnW
+QmECAwEAAaNmMGQwIgYDVR0RBBswGYYXaHR0cHM6Ly9icGJ1ZGR5LmV4YW1wbGUw
+HQYDVR0OBBYEFGXNSxjzRdOEq6A/firnX7nbl1luMB8GA1UdIwQYMBaAFNN7YNE6
+onNpMaFtZyi1d4lK4A9NMA0GCSqGSIb3DQEBCwUAA4IBAQCkgfr63QE+n6/H56E4
+NScBD58nVCbYlHLrrSIbEnlqxdLAC11RrBpyYLlKKsxjufob3YBvdxJ143UxXcvk
+q/Z/8KJOlS4Nuemi/myPDhrQF6U3swz1VnxPruySTh1rxaSZglJfHzXGfY73EgVN
+jtRFvL/UxyJhKDzUwcKLqroesPBDo+1HLtKpGZv4OnXkTkkJx3YhmoS6HUmYUYnq
+vIhp6bC/Go2jng56CkJOcUjRPBb2VaPBnTMz8/XXwsRf4Bu3Yvib//1XVu3+2Oaz
+YE03fndOCuDjdF4LdExl+1I6/Hvh+6p4IFiegSwvdRaATa6txYlpp5UKKdEy4Fa8
+ATe6
 -----END CERTIFICATE-----
 ```
 
-*Generated 2026-06-12T00:08:28.000Z by [tools/artifact-generator](https://github.com/jmandel/cms-ns/tree/no-home-network/tools/artifact-generator). Keys are throwaway examples; every signature verifies against the keys in [keys-and-trust-anchors](keys-and-trust-anchors.md).*
+*Generated 2026-06-12T00:41:21.000Z by [tools/artifact-generator](https://github.com/jmandel/cms-ns/tree/no-home-network/tools/artifact-generator). Keys are throwaway examples; every signature verifies against the keys in [keys-and-trust-anchors](keys-and-trust-anchors.md).*

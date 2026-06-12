@@ -41,7 +41,7 @@ Three patterns cover the methods networks are likely to document. They are examp
 
 ### Once per network, through a developer portal
 
-A human registers once for the whole network. The portal pre-fills its form from the CMS statement and verifies one signature instead of re-vetting the app; what its ad-hoc verification looks like is the network's business, and the spec should leave it unspecified. A network can also run this pattern with a different front door, forwarding dynamic registration requests from any of its data holders to the central registry and syncing the resulting client out to the rest. [Example](example-artifacts/phase2a-alpha-portal.md).
+A human registers once for the whole network. The portal pre-fills its form from the CMS statement and verifies one signature instead of re-vetting the app; what its ad-hoc verification looks like is the network's business, and the spec should leave it unspecified. A network can also run this pattern with a different front door, forwarding dynamic registration requests from any of its data holders to the central registry and syncing the resulting client out to the rest.
 
 ```mermaid
 sequenceDiagram
@@ -62,9 +62,11 @@ sequenceDiagram
     NAS-->>Dev: client_id (recognized at all participating data holders)
 ```
 
+*Example artifacts: [registration through a developer portal](example-artifacts/phase2a-alpha-portal.md).*
+
 ### At each data holder, presenting the CMS software statement
 
-The app presents the CMS statement at each data holder's RFC 7591 registration endpoint, and a client library performs the calls in a loop, so the larger count costs nothing manual. The network may run its own onboarding first, with as much manual review as its policy requires, or skip that layer and let the CMS statement carry the decision; its data holders consult the approval signal automatically. The statement pins the app's display name and URIs under the CMS signature, which closes a gap seen in certificate schemes where any credentialed app can register under any name it likes. [Example](example-artifacts/phase2b-beta-dynreg.md).
+The app presents the CMS statement at each data holder's RFC 7591 registration endpoint, and a client library performs the calls in a loop, so the larger count costs nothing manual. The network may run its own onboarding first, with as much manual review as its policy requires, or skip that layer and let the CMS statement carry the decision; its data holders consult the approval signal automatically. The statement pins the app's display name and URIs under the CMS signature, which closes a gap seen in certificate schemes where any credentialed app can register under any name it likes.
 
 ```mermaid
 sequenceDiagram
@@ -89,9 +91,11 @@ sequenceDiagram
     end
 ```
 
+*Example artifacts: [dynamic registration with the CMS statement](example-artifacts/phase2b-beta-dynreg.md) and [the software statement itself](example-artifacts/phase0-software-statement.md).*
+
 ### At each data holder, presenting a community-issued certificate
 
-The network's community CA issues the app a certificate, with vetting per the network's policy that can lean on the same CMS Library evidence, and UDAP dynamic registration proceeds at each data holder from there. Certificate processes are where costs most often creep in, so the second requirement above bears repeating: a network that chooses a CA-based flow makes sure that getting certificates adds nothing to an app's cost of participating in individual access. Issued certificates have to track the app's `jwks_uri` automatically (see Keys over time below). [Example](example-artifacts/phase2c-gamma-udap.md).
+The network's community CA issues the app a certificate, with vetting per the network's policy that can lean on the same CMS Library evidence, and UDAP dynamic registration proceeds at each data holder from there. Certificate processes are where costs most often creep in, so the second requirement above bears repeating: a network that chooses a CA-based flow makes sure that getting certificates adds nothing to an app's cost of participating in individual access. Issued certificates have to track the app's `jwks_uri` automatically (see Keys over time below).
 
 ```mermaid
 sequenceDiagram
@@ -108,6 +112,8 @@ sequenceDiagram
         DH-->>App: client_id at that data holder
     end
 ```
+
+*Example artifacts: [registration with a community-issued certificate](example-artifacts/phase2c-gamma-udap.md).*
 
 ---
 
@@ -148,16 +154,18 @@ sequenceDiagram
     end
 ```
 
+*Example artifacts, in step order: [the CSP sign-in](example-artifacts/csp-sign-in.md), [opening the authorization step](example-artifacts/authorization-step.md), [record location at a peer network](example-artifacts/peer-record-location.md), [the token response carrying per-site tickets](example-artifacts/issuance-token-response.md), and [redeeming a ticket through to FHIR retrieval](example-artifacts/permission-ticket.md).*
+
 The blue bands carry the same labels as the blue path in the figure; each is a choice point, and the sections after this walkthrough show the alternative at each. Walking it through:
 
-1. BP Buddy signs Maria in at her IAL2 CSP itself: the app is the CSP's relying party and bears the proofing relationship. (The proofing cost was paid once; later sign-ins against that identity are cheap federated authentications.) [Example](example-artifacts/csp-sign-in.md).
-2. The app opens the authorization step at the shared authorization service (a standard SMART App Launch code flow with PKCE), already holding Maria's id_token, which it passes as a hint. The request also carries the app's Library-backed identity, so the service knows exactly which app is asking without any prior relationship. [Example](example-artifacts/authorization-step.md).
+1. BP Buddy signs Maria in at her IAL2 CSP itself: the app is the CSP's relying party and bears the proofing relationship. (The proofing cost was paid once; later sign-ins against that identity are cheap federated authentications.)
+2. The app opens the authorization step at the shared authorization service (a standard SMART App Launch code flow with PKCE), already holding Maria's id_token, which it passes as a hint. The request also carries the app's Library-backed identity, so the service knows exactly which app is asking without any prior relationship.
 3. The service re-authenticates Maria silently against the CSP using the hint: no screen if her CSP session is live, no re-proofing ever, and the service receives a fresh id_token audienced to itself. (Whether ecosystem re-authentication is priced at zero is a CSP participation-terms question worth exploring, not an architecture question.)
-4. The service looks up where Maria has records: its own network's data holders, plus peer networks it has agreements with. The patient-facing screen is the right place for this lookup to live, because whoever presents the choices needs to know what the choices are. [Example](example-artifacts/peer-record-location.md).
+4. The service looks up where Maria has records: its own network's data holders, plus peer networks it has agreements with. The patient-facing screen is the right place for this lookup to live, because whoever presents the choices needs to know what the choices are.
 5. Maria sees the matches and narrows them: which sites, which data categories. Sites she leaves out are never disclosed to the app, either as hints or as tickets.
 6. The token response back to the app carries one signed permission ticket per chosen site plus endpoint hints ([SMART Permission Tickets, proposal 003](https://build.fhir.org/ig/jmandel/smart-permission-tickets-wip/proposal-003-smart-launch-issuance.html); [example response](example-artifacts/issuance-token-response.md)). Each ticket binds the grant: Maria's demographics, her identity evidence, the authorized scope, the site it is for, and the app's key.
 7. At each data holder, the app presents its key and that site's ticket (RFC 8693 token exchange). The data holder verifies the ticket signature, independently verifies the identity evidence inside it, runs its own patient match, applies its own policy, and issues its own access token with the matched patient id ([example ticket](example-artifacts/permission-ticket.md)).
-8. FHIR queries proceed with each data holder's token. A still-valid ticket can be re-presented for a fresh token; expired tickets are renewed at the service with a refresh token, without re-running the authorization step ([example](example-artifacts/issuance-token-response.md)).
+8. FHIR queries proceed with each data holder's token. A still-valid ticket can be re-presented for a fresh token; expired tickets are renewed at the service with a refresh token, without re-running the authorization step.
 
 There is no `$rls` call by the app anywhere in this story: record location happened inside the authorization step, and the app received its answer as tickets.
 
@@ -180,11 +188,13 @@ sequenceDiagram
     RLS-->>App: locations holding Maria's records
 ```
 
-`cms_smart` is the extension CMS documents for [Blue Button's CMS Aligned Networks flow](https://bluebutton.cms.gov/cms-aligned-networks-documentation/): a `client_credentials` grant whose signed `client_assertion` carries a `purpose_of_use` (`PATRQT` for patient access) and the patient's IAL2 id_token ([example](example-artifacts/phase3-rls.md)). `$rls` stands in for a record location operation whose wire shape is still an open question. Here "what Maria authorized" rests on the app's own assertion, backed by Library vetting, and Maria never leaves the app. This is the shape worked through end to end in the [connectivity walkthrough](app-connectivity-flows.md), and it is the floor the ecosystem already documents. Choosing it constrains the other two choice points: with no authorization step there is no service-side screen, so narrowing moves into the app, and there are no tickets, so the token request becomes `cms_smart`.
+*Example artifacts: [the client_credentials token and $rls call](example-artifacts/phase3-rls.md).*
+
+`cms_smart` is the extension CMS documents for [Blue Button's CMS Aligned Networks flow](https://bluebutton.cms.gov/cms-aligned-networks-documentation/): a `client_credentials` grant whose signed `client_assertion` carries a `purpose_of_use` (`PATRQT` for patient access) and the patient's IAL2 id_token. `$rls` stands in for a record location operation whose wire shape is still an open question. Here "what Maria authorized" rests on the app's own assertion, backed by Library vetting, and Maria never leaves the app. This is the shape worked through end to end in the [connectivity walkthrough](app-connectivity-flows.md), and it is the floor the ecosystem already documents. Choosing it constrains the other two choice points: with no authorization step there is no service-side screen, so narrowing moves into the app, and there are no tickets, so the token request becomes `cms_smart`.
 
 ## Choice point: where Maria narrows sites
 
-In the permission-ticket flow, Maria narrows sites on the service's screen, before the app learns anything. The alternative sends the app everything ([example](example-artifacts/blanket-ticket.md)) and lets her narrow the list inside the app:
+In the permission-ticket flow, Maria narrows sites on the service's screen, before the app learns anything. The alternative sends the app everything and lets her narrow the list inside the app:
 
 ```mermaid
 sequenceDiagram
@@ -198,11 +208,13 @@ sequenceDiagram
     Maria->>App: deselects sites in the app
 ```
 
+*Example artifacts: [the blanket ticket and the full hint list](example-artifacts/blanket-ticket.md).*
+
 Maria has the same control over what data flows either way. The difference is what the app learns: with in-app selection the app has already seen every care relationship (the behavioral health clinic, the reproductive health clinic) before Maria chooses. No in-app control can undo that disclosure. Service-side selection is the only placement where "the app never learns I was ever there" is achievable.
 
 ## Choice point: what the app presents at each data holder
 
-In the permission-ticket flow the app presents that site's ticket. The alternative uses the same `cms_smart` call described under the grant choice point ([example](example-artifacts/phase4b-federated.md)):
+In the permission-ticket flow the app presents that site's ticket. The alternative uses the same `cms_smart` call described under the grant choice point:
 
 ```mermaid
 sequenceDiagram
@@ -213,6 +225,8 @@ sequenceDiagram
     App->>DH: POST /token: client_credentials + client_assertion<br/>cms_smart: purpose_of_use PATRQT, IAL2 id_token
     DH-->>App: access_token bound to Maria, matched patient id
 ```
+
+*Example artifacts: [the cms_smart token request at a data holder](example-artifacts/phase4b-federated.md).*
 
 The data holder's verification work is nearly identical either way: client key against the Library-verified `jwks_uri`, identity evidence, its own patient match. What shifts is the attestation of scope: a ticket carries what an independent party recorded Maria authorizing; the `cms_smart` call carries what the app asserts she authorized. Notably, a deployment can adopt the authorization step while its data holders keep accepting `cms_smart` unchanged; the service's record of the grant exists even where it is not yet presented, which makes this the natural migration column in the table below.
 

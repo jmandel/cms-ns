@@ -105,13 +105,14 @@ function httpMd(title: string, lines: string[], body?: unknown, bodyLang = "json
   return out.join("\n");
 }
 
+const FLOWS_ONLY = new Set(["phase1-npd-discovery", "phase4a-alpha-facilitated"]);
 const pages: { file: string; title: string }[] = [];
 function writePage(file: string, title: string, intro: string, sections: string[]) {
   pages.push({ file, title });
   const md = [
     `# ${title}`,
     "",
-    `*Generated example for [app-connectivity-flows.md](../app-connectivity-flows.md). ${intro}*`,
+    `*Worked example for ${FLOWS_ONLY.has(file) ? "[the registration and connectivity walkthrough](../app-connectivity-flows.md)" : "[the record location and data access write-up](../authorizing-access.md)"}. ${intro}*`,
     "",
     sections.join("\n\n---\n\n"),
     "",
@@ -203,7 +204,7 @@ const softwareStatement = await new SignJWT({
 
 writePage(
   "phase0-software-statement",
-  "Phase 0 — CMS-signed software statement",
+  "The CMS-signed software statement",
   "CMS re-signs this statement on a short cycle for as long as BP Buddy is active in the Medicare App Library. It is the only credential the app carries into every network.",
   [
     httpMd("Request — anyone may fetch the current statement", [
@@ -282,7 +283,7 @@ const keyPossession = await new SignJWT({})
 
 writePage(
   "phase2a-alpha-portal",
-  "Phase 2a — Alpha developer portal",
+  "Registration through a developer portal",
   "Most of this flow is a human in a browser, so the artifacts are the two machine-verifiable pieces: the statement link the developer pastes, and a key-possession proof the portal can ask for.",
   [
     [
@@ -317,7 +318,7 @@ writePage(
 // =====================================================================
 writePage(
   "phase2b-beta-dynreg",
-  "Phase 2b — Dynamic registration at a Beta data holder",
+  "Dynamic registration with the CMS statement",
   "The same RFC 7591 call repeats at each Beta data holder; one representative exchange is shown, at Lakeside Clinic.",
   [
     httpMd(
@@ -373,7 +374,7 @@ const udapStatement = await new SignJWT({
 
 writePage(
   "phase2c-gamma-udap",
-  "Phase 2c — UDAP dynamic registration at a Gamma data holder",
+  "Registration with a community-issued certificate",
   "The software statement here is self-signed with the key inside an X.509 certificate that Gamma's community CA issued to the app; trust comes from the chain to the CA anchor published in NPD. The certificate is real and chains to the CA in keys-and-trust-anchors.",
   [
     [
@@ -440,7 +441,7 @@ const rlsAccessToken = opaque();
 
 writePage(
   "phase3-rls",
-  "Phase 3 — Patient-bound token and $rls at Beta",
+  "client_credentials + $rls: the app-asserted grant at a network",
   "Maria authenticated at her IAL2 CSP moments ago; her id_token travels inside the cms_smart extension of the client_assertion, following the Blue Button CMS Aligned Networks pattern. The access token comes back bound to her, so $rls can only locate her records.",
   [
     [
@@ -723,7 +724,7 @@ const lakesideAccessToken = opaque();
 
 writePage(
   "phase4b-federated",
-  "Phase 4b — Federated retrieval at Lakeside Clinic (Beta; Gamma is identical)",
+  "cms_smart at a data holder: token and FHIR retrieval",
   "Same token shape as everywhere else; the only difference from 4a is that the data holder's own authorization server issues the token, and a refresh_token supports the rolling 90-day window of can-spec §9.",
   [
     httpMd(
@@ -788,7 +789,7 @@ const rotatedAssertion = await new SignJWT({
 
 writePage(
   "phase5-key-rotation",
-  "Phase 5 — Key rotation",
+  "Key rotation",
   "The app publishes key B alongside key A, then signs with the new kid; data holders resolve it at the live jwks_uri with nothing to re-issue.",
   [
     [
