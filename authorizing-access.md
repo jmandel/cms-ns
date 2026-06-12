@@ -119,7 +119,28 @@ sequenceDiagram
 
 ## The permission-ticket flow, step by step
 
-This expands the blue path from the figure. A shared authorization service captures the grant: a party trusted by the network to do so, though not necessarily operated by it. It may be the network's own service, a portal vendor, or another party the network's data holders recognize, and it can run record location lookups against its own network and against peer networks it has agreements with. The app then redeems per-site tickets at the data holders:
+This expands the blue path from the figure. A shared authorization service captures the grant: a party trusted by the network to do so, though not necessarily operated by it. It may be the network's own service, a portal vendor, or another party the network's data holders recognize, and it can run record location lookups against its own network and against peer networks it has agreements with.
+
+### Reaching the service
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant App as BP Buddy
+    participant CSP as IAL2 CSP
+    participant SAS as Shared authorization service
+
+    App->>CSP: sends Maria to sign in<br/>(the app is the CSP's relying party)
+    CSP-->>App: IAL2 id_token
+    App->>SAS: opens the authorization step<br/>(code flow with PKCE, carrying the id_token as a hint)
+```
+
+*Example artifacts: [the CSP sign-in](example-artifacts/csp-sign-in.md) and [opening the authorization step](example-artifacts/authorization-step.md).*
+
+1. BP Buddy signs Maria in at her IAL2 CSP itself: the app is the CSP's relying party and bears the proofing relationship. (The proofing cost was paid once; later sign-ins against that identity are cheap federated authentications.)
+2. The app opens the authorization step at the shared authorization service (a standard SMART App Launch code flow with PKCE), already holding Maria's id_token, which it passes as a hint. The request also carries the app's Library-backed identity, so the service knows exactly which app is asking without any prior relationship.
+
+### At the service
 
 ```mermaid
 sequenceDiagram
@@ -128,48 +149,42 @@ sequenceDiagram
     participant App as BP Buddy
     participant CSP as IAL2 CSP
     participant SAS as Shared authorization service
+
+    SAS->>CSP: silent re-authentication via id_token_hint<br/>(no screen if Maria's CSP session is live)
+    CSP-->>SAS: fresh id_token, audienced to the service
+    SAS->>SAS: record location lookup: its own network,<br/>plus peer networks it has agreements with
+    SAS->>Maria: shows the matches<br/>Maria narrows sites and data categories
+    SAS-->>App: token response: per-site permission tickets<br/>+ endpoint hints
+```
+
+*Example artifacts: [record location at a peer network](example-artifacts/peer-record-location.md) and [the token response carrying per-site tickets](example-artifacts/issuance-token-response.md).*
+
+3. The service re-authenticates Maria silently against the CSP using the hint: no screen if her CSP session is live, no re-proofing ever, and the service receives a fresh id_token audienced to itself. (Whether ecosystem re-authentication is priced at zero is a CSP participation-terms question worth exploring, not an architecture question.)
+4. The service looks up where Maria has records: its own network's data holders, plus peer networks it has agreements with. The patient-facing screen is the right place for this lookup to live, because whoever presents the choices needs to know what the choices are.
+5. Maria sees the matches and narrows them: which sites, which data categories. Sites she leaves out are never disclosed to the app, either as hints or as tickets.
+6. The token response back to the app carries one signed permission ticket per chosen site plus endpoint hints ([SMART Permission Tickets, proposal 003](https://build.fhir.org/ig/jmandel/smart-permission-tickets-wip/proposal-003-smart-launch-issuance.html)). Each ticket binds the grant: Maria's demographics, her identity evidence, the authorized scope, the site it is for, and the app's key.
+
+### At each data holder
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant App as BP Buddy
     participant DH as Data holders (each one)
 
-    App->>CSP: sends Maria to sign in<br/>(the app is the CSP's relying party)
-    CSP-->>App: IAL2 id_token
-    rect rgba(0, 114, 178, 0.06)
-        Note over App,SAS: Maria's grant is recorded by a shared service
-        App->>SAS: opens the authorization step<br/>(code flow with PKCE, carrying the id_token as a hint)
-        SAS->>CSP: silent re-authentication via id_token_hint<br/>(no screen if Maria's CSP session is live)
-        CSP-->>SAS: fresh id_token, audienced to the service
-        SAS->>SAS: record location lookup: its own network,<br/>plus peer networks it has agreements with
-        rect rgba(0, 114, 178, 0.10)
-            Note over Maria,SAS: only the service sees the full list
-            SAS->>Maria: shows the matches<br/>Maria narrows sites and data categories
-        end
-        SAS-->>App: token response: per-site permission tickets<br/>+ endpoint hints
-    end
     loop for each site Maria chose
-        rect rgba(0, 114, 178, 0.06)
-            Note over App,DH: the app presents a per-site ticket
-            App->>DH: redeems that site's ticket<br/>(app key + ticket, RFC 8693)
-            DH-->>App: access token + matched patient id
-        end
+        App->>DH: redeems that site's ticket<br/>(app key + ticket, RFC 8693)
+        DH-->>App: access token + matched patient id
         App->>DH: FHIR queries
     end
 ```
 
-*Example artifacts, in step order: [the CSP sign-in](example-artifacts/csp-sign-in.md), [opening the authorization step](example-artifacts/authorization-step.md), [record location at a peer network](example-artifacts/peer-record-location.md), [the token response carrying per-site tickets](example-artifacts/issuance-token-response.md), and [redeeming a ticket through to FHIR retrieval](example-artifacts/permission-ticket.md).*
+*Example artifacts: [redeeming a ticket through to FHIR retrieval](example-artifacts/permission-ticket.md).*
 
-The blue bands carry the same labels as the blue path in the figure; each is a choice point, and the sections after this walkthrough show the alternative at each. Walking it through:
-
-1. BP Buddy signs Maria in at her IAL2 CSP itself: the app is the CSP's relying party and bears the proofing relationship. (The proofing cost was paid once; later sign-ins against that identity are cheap federated authentications.)
-2. The app opens the authorization step at the shared authorization service (a standard SMART App Launch code flow with PKCE), already holding Maria's id_token, which it passes as a hint. The request also carries the app's Library-backed identity, so the service knows exactly which app is asking without any prior relationship.
-3. The service re-authenticates Maria silently against the CSP using the hint: no screen if her CSP session is live, no re-proofing ever, and the service receives a fresh id_token audienced to itself. (Whether ecosystem re-authentication is priced at zero is a CSP participation-terms question worth exploring, not an architecture question.)
-4. The service looks up where Maria has records: its own network's data holders, plus peer networks it has agreements with. The patient-facing screen is the right place for this lookup to live, because whoever presents the choices needs to know what the choices are.
-5. Maria sees the matches and narrows them: which sites, which data categories. Sites she leaves out are never disclosed to the app, either as hints or as tickets.
-6. The token response back to the app carries one signed permission ticket per chosen site plus endpoint hints ([SMART Permission Tickets, proposal 003](https://build.fhir.org/ig/jmandel/smart-permission-tickets-wip/proposal-003-smart-launch-issuance.html); [example response](example-artifacts/issuance-token-response.md)). Each ticket binds the grant: Maria's demographics, her identity evidence, the authorized scope, the site it is for, and the app's key.
-7. At each data holder, the app presents its key and that site's ticket (RFC 8693 token exchange). The data holder verifies the ticket signature, independently verifies the identity evidence inside it, runs its own patient match, applies its own policy, and issues its own access token with the matched patient id ([example ticket](example-artifacts/permission-ticket.md)).
+7. At each data holder, the app presents its key and that site's ticket (RFC 8693 token exchange). The data holder verifies the ticket signature, independently verifies the identity evidence inside it, runs its own patient match, applies its own policy, and issues its own access token with the matched patient id.
 8. FHIR queries proceed with each data holder's token. A still-valid ticket can be re-presented for a fresh token; expired tickets are renewed at the service with a refresh token, without re-running the authorization step.
 
 There is no `$rls` call by the app anywhere in this story: record location happened inside the authorization step, and the app received its answer as tickets.
-
----
 
 ## Choice point: who records the grant
 

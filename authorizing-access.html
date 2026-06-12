@@ -43,6 +43,9 @@
   .dm thead th { border-bottom: 2px solid var(--rule-strong, #d4d4d4); }
   .dm .hb { color: #0072b2; } .dm .ho { color: #b97800; }
   .dm tbody th { font-weight: 600; width: 24%; }
+  .band-b, .band-o { padding: 6px 22px 14px; margin: 2em -22px; border-radius: 10px; }
+  .band-b { background: #f3f8fc; border: 1px solid #cfe3f3; }
+  .band-o { background: #fdf9f0; border: 1px solid #f0e0c2; }
   .dm .g { background: #ddf0e0; border-left: 4px solid #15803d; }
   .dm .y { background: #fdeec9; border-left: 4px solid #b45309; }
   .dm .r { background: #f6d2d2; border-left: 4px solid #b91c1c; }
@@ -95,6 +98,22 @@ fetch(SOURCE).then(r => {
     const { svg } = await mermaid.render('mmd-' + (i++), el.textContent);
     el.innerHTML = svg;
   }
+  function band(startsWith, stopsAt, cls) {
+    const h2s = [...document.querySelectorAll('#content h2')];
+    const start = h2s.find(h => h.textContent.startsWith(startsWith));
+    if (!start) return;
+    const wrap = document.createElement('div');
+    wrap.className = cls;
+    start.parentNode.insertBefore(wrap, start);
+    let node = start;
+    while (node && !(node.tagName === 'H2' && node !== start && node.textContent.startsWith(stopsAt))) {
+      const next = node.nextSibling;
+      wrap.appendChild(node);
+      node = next;
+    }
+  }
+  band('The permission-ticket flow', 'Choice point', 'band-b');
+  band('Choice point: who records the grant', 'Comparing the paths', 'band-o');
 }).catch(e => {
   document.getElementById('content').innerHTML =
     '<p>Could not load <code>' + SOURCE + '</code> (' + e.message + '). <a href="' + SOURCE + '">View raw</a>.</p>';
