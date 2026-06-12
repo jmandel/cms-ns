@@ -238,7 +238,7 @@ In the permission-ticket flow, the app signed Maria in at the CSP and the servic
 
 ## Comparing the paths
 
-Rows are criteria; the text in each cell describes what that path looks like from that criterion. The colors are a first pass at scoring: green favorable, amber mixed, rose unfavorable. The text should be uncontroversial; the colors are the debatable part, and debating them is the point.
+Rows are criteria; the text in each cell describes what that path looks like from that criterion. The colors and marks are a first pass at scoring: ✓ favorable, ± mixed, ✗ unfavorable. The text should be uncontroversial; the scoring is the debatable part, and debating it is the point.
 
 <table class="dm">
 <thead><tr><th></th><th class="hb">network-based permission tickets</th><th class="ho">app-based client assertions</th></tr></thead>

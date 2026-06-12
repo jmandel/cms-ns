@@ -43,7 +43,12 @@
   .dm thead th { border-bottom: 2px solid var(--rule-strong, #d4d4d4); }
   .dm .hb { color: #0072b2; } .dm .ho { color: #b97800; }
   .dm tbody th { font-weight: 600; width: 24%; }
-  .dm .g { background: #e9f3ec; } .dm .y { background: #fdf5e3; } .dm .r { background: #fdecea; }
+  .dm .g { background: #ddf0e0; border-left: 4px solid #15803d; }
+  .dm .y { background: #fdeec9; border-left: 4px solid #b45309; }
+  .dm .r { background: #f6d2d2; border-left: 4px solid #b91c1c; }
+  .dm .g::before { content: "\2713\00a0 "; font-weight: 700; color: #14532d; }
+  .dm .y::before { content: "\00b1\00a0 "; font-weight: 700; color: #7a4a06; }
+  .dm .r::before { content: "\2717\00a0 "; font-weight: 700; color: #7f1d1d; }
   .cp-b { background: #e1eef9; border: 1px solid #0072b2; color: #0b4a75; }
   .cp-o { background: #fbf0da; border: 1px solid #cc8400; color: #7a5200; }
 </style>
