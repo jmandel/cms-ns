@@ -236,33 +236,23 @@ In the permission-ticket flow, the app signed Maria in at the CSP and the servic
 
 ---
 
-## The two paths side by side
+## Comparing the paths
 
-| | <span class="cp cp-b">network-based permission tickets</span> | <span class="cp cp-o">app-based client assertions</span> |
-|---|---|---|
-| Who attests what Maria authorized | a shared authorization service, in a signed ticket | the app, backed by Library vetting |
-| Who learns the full site list | only the service; the app learns chosen sites | the app |
-| Maria's steps | one redirect: sign-in (often silent) + one screen | none beyond the CSP sign-in |
-| What each data holder verifies | the ticket, the identity evidence inside it, and its own patient match | the `cms_smart` call |
+Columns are ways of doing it; rows are criteria; cells describe what each looks like from that criterion. The cells are descriptions, not scores: judging which trade-offs matter is the working group's call, and it is easier to agree on what each cell says than on how to color it.
 
-The steps can be mixed. A service-captured grant can be presented to data holders as `cms_smart`, for example, so data holders change nothing while the authorization step arrives; and a deployment could keep service-side tickets while letting the patient narrow sites in the app. Those combinations are workable, but the decision in front of the working group is between these two paths.
+| | <span class="cp cp-b">network-based permission tickets</span> | <span class="cp cp-o">app-based client assertions</span> | mixed: service-recorded grant, presented as `cms_smart` |
+|---|---|---|---|
+| Who records what Maria agreed to share | a shared authorization service, on its own screen | the app, in its own UI | the service, on its own screen |
+| What the app learns about Maria's care sites | the sites she chose; others are never named to it | every match, before she narrows | the sites she chose |
+| Maria's steps at grant time | one redirect; sign-in usually silent; one screen | none beyond the CSP sign-in inside the app | one redirect, one screen |
+| What each data holder verifies | the ticket signature, the identity evidence inside it, and its own patient match | the app's key, the id_token, and its own patient match | same as assertions |
+| Changes required at data holders | accept RFC 8693 ticket redemption | none; Blue Button documents this call | none |
+| New parties that must exist | a shared authorization service the network trusts | none | a shared authorization service |
+| How Maria revokes | once, at the service; status reaches credentials derived from the ticket | per app, and per data holder | the service's record can be withdrawn, but data holders do not consult it at token time |
+| What the audit trail holds | the ticket itself: which app, which grant, signed | the data holder's log of the app's call and its asserted purpose | the call log, plus the service's separate record |
+| How coverage grows | the service adds peer networks; Maria's stops shrink toward one | the app integrates each network's record location itself | discovery grows like tickets; presentation stays as today |
 
----|---|---|---|---|---|
-| **Service-captured grant, tickets at data holders** | <span class="cp cp-b">grant</span> <span class="cp cp-b">locations</span> <span class="cp cp-b">token</span> | shared authorization service, in a signed ticket | the service only; the app learns chosen sites | one redirect: sign-in (often silent) + one screen | ticket + evidence + own match |
-| **Service-captured grant, `cms_smart` at data holders** | <span class="cp cp-b">grant</span> <span class="cp cp-b">locations</span> <span class="cp cp-o">token</span> | the service (recorded), app (presented) | the service only | same as the first row | `cms_smart` call, unchanged |
-| **Service-captured grant, site selection in the app** | <span class="cp cp-b">grant</span> <span class="cp cp-o">locations</span> <span class="cp cp-b">token</span> | shared authorization service | the app | one redirect, selection in app | ticket + evidence + own match |
-| **App-asserted grant (`client_credentials` + `$rls`)** | <span class="cp cp-o">grant</span> <span class="cp cp-o">locations</span> <span class="cp cp-o">token</span> | the app, backed by Library vetting | the app | none beyond CSP sign-in | `cms_smart` call |
-
-One dependency: if the grant is app-asserted, then site narrowing happens in the app and data holders see `cms_smart`, because without the authorization step there is no service screen and no tickets. The rest combine freely.
-
----
-
-## What the authorization step adds
-
-- **Site-relationship privacy.** The existence of a care relationship is disclosed only as far as Maria chooses, which only service-side selection can deliver.
-- **Single-place revocation.** Maria revokes the grant where she made it, and the revocation reaches every credential derived from it, instead of hunting through per-app and per-portal switches.
-- **An audit story that names the app.** The ticket records which app Maria authorized; that is what data holders log and what she will recognize later.
-- **Incremental federation.** A service that shows its own network's matches can add peer networks as agreements form. The patient's stops shrink from many toward one, with no flag day.
+One dependency still holds: with no authorization step at all (the assertions column), there is no service screen and no tickets, so the other rows of that column follow. Beyond that, a row-by-row mix is workable where the cells say so.
 
 ## Keys over time
 
