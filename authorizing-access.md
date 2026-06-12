@@ -21,7 +21,7 @@ The page shows one full flow, then three places where a deployment can do things
 
 ## What has to happen
 
-Before a data holder releases anything, it has to know the app, know the patient at IAL2, and know what the patient authorized, and someone has to work out where the patient's records are. There are two ways to do the last three steps: with network-based permission tickets (blue) or with app-based client assertions (orange). A deployment can also mix the two, step by step; the table near the end shows the combinations.
+Before a data holder releases anything, it has to know the app, know the patient at IAL2, and know what the patient authorized, and someone has to work out where the patient's records are. There are two ways to do the last three steps: with network-based permission tickets (blue) or with app-based client assertions (orange). The table near the end compares them.
 
 ![The app joins the ecosystem, the patient verifies her identity, someone records her grant and sees where her records are, and each data holder issues its own token, with a blue permission-ticket path and an orange client-assertion path](authorizing-access-logical.svg)
 
@@ -228,7 +228,7 @@ sequenceDiagram
 
 *Example artifacts: [the cms_smart token request at a data holder](example-artifacts/cms-smart-data-holder.md).*
 
-The data holder's verification work is nearly identical either way: client key against the Library-verified `jwks_uri`, identity evidence, its own patient match. What shifts is the attestation of scope: a ticket carries what an independent party recorded Maria authorizing; the `cms_smart` call carries what the app asserts she authorized. Notably, a deployment can adopt the authorization step while its data holders keep accepting `cms_smart` unchanged; the service's record of the grant exists even where it is not yet presented, which makes this the natural migration column in the table below.
+The data holder's verification work is nearly identical either way: client key against the Library-verified `jwks_uri`, identity evidence, its own patient match. What shifts is the attestation of scope: a ticket carries what an independent party recorded Maria authorizing; the `cms_smart` call carries what the app asserts she authorized. Notably, a deployment can adopt the authorization step while its data holders keep accepting `cms_smart` unchanged; the service's record of the grant exists even where it is not yet presented, which makes this a natural transition stage.
 
 ## How Maria signs in (within the grant step)
 
@@ -236,10 +236,18 @@ In the permission-ticket flow, the app signed Maria in at the CSP and the servic
 
 ---
 
-## The combinations side by side
+## The two paths side by side
 
-| | Choices | Who attests what Maria authorized | Who learns the full site list | Maria's steps | Data holder verifies |
-|---|---|---|---|---|---|
+| | <span class="cp cp-b">network-based permission tickets</span> | <span class="cp cp-o">app-based client assertions</span> |
+|---|---|---|
+| Who attests what Maria authorized | a shared authorization service, in a signed ticket | the app, backed by Library vetting |
+| Who learns the full site list | only the service; the app learns chosen sites | the app |
+| Maria's steps | one redirect: sign-in (often silent) + one screen | none beyond the CSP sign-in |
+| What each data holder verifies | the ticket, the identity evidence inside it, and its own patient match | the `cms_smart` call |
+
+The steps can be mixed. A service-captured grant can be presented to data holders as `cms_smart`, for example, so data holders change nothing while the authorization step arrives; and a deployment could keep service-side tickets while letting the patient narrow sites in the app. Those combinations are workable, but the decision in front of the working group is between these two paths.
+
+---|---|---|---|---|---|
 | **Service-captured grant, tickets at data holders** | <span class="cp cp-b">grant</span> <span class="cp cp-b">locations</span> <span class="cp cp-b">token</span> | shared authorization service, in a signed ticket | the service only; the app learns chosen sites | one redirect: sign-in (often silent) + one screen | ticket + evidence + own match |
 | **Service-captured grant, `cms_smart` at data holders** | <span class="cp cp-b">grant</span> <span class="cp cp-b">locations</span> <span class="cp cp-o">token</span> | the service (recorded), app (presented) | the service only | same as the first row | `cms_smart` call, unchanged |
 | **Service-captured grant, site selection in the app** | <span class="cp cp-b">grant</span> <span class="cp cp-o">locations</span> <span class="cp cp-b">token</span> | shared authorization service | the app | one redirect, selection in app | ticket + evidence + own match |
