@@ -29,8 +29,10 @@
   th, td { border: 1px solid var(--rule); padding: 8px 10px; text-align: left; vertical-align: top; }
   th { background: var(--accent-soft); }
   hr { border: none; border-top: 1px solid var(--rule); margin: 2.5em 0; }
-  .mermaid { background: #fff; border: 1px solid var(--rule); border-radius: 6px; padding: 12px; margin: 1.2em 0; text-align: center;
-    width: min(1080px, 96vw); margin-left: calc(50% - min(540px, 48vw)); }
+  .mermaid { background: #fff; border: 1px solid var(--rule); border-radius: 6px; padding: 12px; margin: 1.2em 0; text-align: center; }
+  @media (min-width: 1160px) {
+    .mermaid { width: 1080px; margin-left: calc(50% - 540px); }
+  }
   .site-nav { font-size: 0.95em; background: var(--accent-soft); border: 1px solid var(--rule); border-radius: 6px; padding: 10px 16px; margin-bottom: 28px; }
   .site-nav a { font-weight: 600; }
 </style>
