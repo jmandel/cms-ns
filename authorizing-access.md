@@ -115,6 +115,32 @@ sequenceDiagram
 
 *Example artifacts: [registration with a community-issued certificate](example-artifacts/certificate-registration.md).*
 
+### Keys over time
+
+The app's keys live at its `jwks_uri` and rotate there on the app's own schedule. The CMS statement binds the URL, not a key, so rotation needs no re-issuance anywhere: data holders resolve the app's current keys at token time by `kid`, and the app publishes a new key alongside the old for an overlap window, starts signing with the new `kid`, and retires the old one.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant App as BP Buddy
+    participant JWKS as bpbuddy.example/.well-known/jwks.json
+    participant CMS as CMS App Library (monitor)
+    participant DH as Any data holder auth server
+
+    App->>JWKS: Publish key B alongside key A (overlap window)
+    CMS->>JWKS: Routine monitoring (URI still serves a valid JWKS)
+    App->>DH: Token request signed with kid=B
+    DH->>JWKS: Resolve kid=B at the live jwks_uri
+    DH-->>App: access_token (rotation invisible to the trust layer)
+    App->>JWKS: Retire key A after overlap window
+```
+
+*Example artifacts: [key rotation, with the JWKS before and during the overlap window](example-artifacts/key-rotation.md).*
+
+Credentials that a network or a trust community issues to the app (the certificate method above) have to track the `jwks_uri` automatically; if re-syncing means emailing someone, rotation has turned into a manual per-network step.
+
+---
+
 ---
 
 ## The permission-ticket flow, step by step
@@ -207,6 +233,12 @@ sequenceDiagram
 
 `cms_smart` is the extension CMS documents for [Blue Button's CMS Aligned Networks flow](https://bluebutton.cms.gov/cms-aligned-networks-documentation/): a `client_credentials` grant whose signed `client_assertion` carries a `purpose_of_use` (`PATRQT` for patient access) and the patient's IAL2 id_token. `$rls` stands in for a record location operation whose wire shape is still an open question. Here "what Maria authorized" rests on the app's own assertion, backed by Library vetting, and Maria never leaves the app. It is the floor the ecosystem already documents. Choosing it constrains the other two choice points: with no authorization step there is no service-side screen, so narrowing moves into the app, and there are no tickets, so the token request becomes `cms_smart`. The separation at stake here: a shared service recording the grant has no financial stake in the data flowing, while the app receiving the data does. CMS's own position that a CSP should not learn sites of care draws the same kind of line between roles. Nothing mandates the separation; the matrix below is the accounting.
 
+## How Maria signs in (within the grant step)
+
+In the permission-ticket flow, the app signed Maria in at the CSP and the service re-authenticates her silently with an `id_token_hint`, which yields a fresh, service-audienced assertion that the person in this browser is Maria. The lighter option skips the re-authentication: the service accepts the app-passed IAL2 id_token itself as the sign-in. That token is automatically verifiable and audience-bound to the app, and accepting it is the same trust model the `cms_smart` flow already runs on. It is an honest option provided it is named for what it is: it proves the app holds a recent assertion about Maria, not that Maria is present in this browser. A service accepting it should say so rather than implying a separation it does not deliver.
+
+---
+
 ## Choice point: where Maria narrows sites
 
 In the permission-ticket flow, Maria narrows sites on the service's screen, before the app learns anything. The alternative sends the app everything and lets her narrow the list inside the app:
@@ -245,12 +277,6 @@ sequenceDiagram
 
 The data holder's verification work is nearly identical either way: client key against the Library-verified `jwks_uri`, identity evidence, its own patient match. What shifts is the attestation of scope: a ticket carries what an independent party recorded Maria authorizing; the `cms_smart` call carries what the app asserts she authorized. Notably, a deployment can adopt the authorization step while its data holders keep accepting `cms_smart` unchanged; the service's record of the grant exists even where it is not yet presented, which makes this a natural transition stage. Continued access also differs here: on the assertions path, data holders may issue refresh tokens under the can-spec's rolling 90-day window; on the ticket path, a still-valid ticket is simply presented again, and expired tickets are renewed at the service.
 
-## How Maria signs in (within the grant step)
-
-In the permission-ticket flow, the app signed Maria in at the CSP and the service re-authenticates her silently with an `id_token_hint`, which yields a fresh, service-audienced assertion that the person in this browser is Maria. The lighter option skips the re-authentication: the service accepts the app-passed IAL2 id_token itself as the sign-in. That token is automatically verifiable and audience-bound to the app, and accepting it is the same trust model the `cms_smart` flow already runs on. It is an honest option provided it is named for what it is: it proves the app holds a recent assertion about Maria, not that Maria is present in this browser. A service accepting it should say so rather than implying a separation it does not deliver.
-
----
-
 ## Comparing the paths
 
 Rows are criteria; the text in each cell describes what that path looks like from that criterion. The colors and marks are a first pass at scoring: ✓ favorable, ± mixed, ✗ unfavorable. The text should be uncontroversial; the scoring is the debatable part, and debating it is the point.
@@ -271,29 +297,3 @@ Rows are criteria; the text in each cell describes what that path looks like fro
 </table>
 
 A transition mix is workable where the cells suggest it: a service-recorded grant presented to data holders as `cms_smart` scores like the assertions column at the data holder rows and like the tickets column everywhere else, which is what makes it a deployment stage rather than a destination.
-
-## Keys over time
-
-The app's keys live at its `jwks_uri` and rotate there on the app's own schedule. The CMS statement binds the URL, not a key, so rotation needs no re-issuance anywhere: data holders resolve the app's current keys at token time by `kid`, and the app publishes a new key alongside the old for an overlap window, starts signing with the new `kid`, and retires the old one.
-
-```mermaid
-sequenceDiagram
-    autonumber
-    participant App as BP Buddy
-    participant JWKS as bpbuddy.example/.well-known/jwks.json
-    participant CMS as CMS App Library (monitor)
-    participant DH as Any data holder auth server
-
-    App->>JWKS: Publish key B alongside key A (overlap window)
-    CMS->>JWKS: Routine monitoring (URI still serves a valid JWKS)
-    App->>DH: Token request signed with kid=B
-    DH->>JWKS: Resolve kid=B at the live jwks_uri
-    DH-->>App: access_token (rotation invisible to the trust layer)
-    App->>JWKS: Retire key A after overlap window
-```
-
-*Example artifacts: [key rotation, with the JWKS before and during the overlap window](example-artifacts/key-rotation.md).*
-
-Credentials that a network or a trust community issues to the app (the certificate method above) have to track the `jwks_uri` automatically; if re-syncing means emailing someone, rotation has turned into a manual per-network step.
-
----
