@@ -1,80 +1,85 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 300" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1290 300" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif">
   <defs>
-    <marker id="la" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <marker id="la" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#555"/>
     </marker>
-    <marker id="lb" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#0072b2"/>
-    </marker>
-    <marker id="lo" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#cc8400"/>
+    <marker id="lg" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#555"/>
     </marker>
   </defs>
 
   <!-- Tile 1: app known -->
   <g>
-    <rect x="20" y="118" width="150" height="112" rx="9" fill="#fafafa" stroke="#d4d4d4" stroke-width="1.2"/>
-    <text x="95" y="152" text-anchor="middle" font-size="14" font-weight="600">The app</text>
-    <text x="95" y="170" text-anchor="middle" font-size="14" font-weight="600">is known</text>
-    <text x="95" y="198" text-anchor="middle" font-size="11.5" fill="#555">CMS Library statement</text>
-    <text x="95" y="213" text-anchor="middle" font-size="11.5" fill="#555">+ network registration</text>
+    <rect x="20" y="130" width="150" height="112" rx="9" fill="#fafafa" stroke="#c2c6ca" stroke-width="1.2"/>
+    <text x="95" y="164" text-anchor="middle" font-size="14" font-weight="600">The app</text>
+    <text x="95" y="182" text-anchor="middle" font-size="14" font-weight="600">is known</text>
+    <text x="95" y="210" text-anchor="middle" font-size="11.5" fill="#555">CMS Library statement</text>
+    <text x="95" y="225" text-anchor="middle" font-size="11.5" fill="#555">+ network registration</text>
   </g>
 
-  <line x1="170" y1="174" x2="204" y2="174" stroke="#555" stroke-width="1.2" marker-end="url(#la)"/>
+  <line x1="170" y1="186" x2="204" y2="186" stroke="#555" stroke-width="1.2" marker-end="url(#la)"/>
 
   <!-- Tile 2: Maria known -->
   <g>
-    <rect x="208" y="118" width="150" height="112" rx="9" fill="#fafafa" stroke="#d4d4d4" stroke-width="1.2"/>
-    <text x="283" y="152" text-anchor="middle" font-size="14" font-weight="600">Maria is known</text>
-    <text x="283" y="170" text-anchor="middle" font-size="14" font-weight="600">at IAL2</text>
-    <text x="283" y="198" text-anchor="middle" font-size="11.5" fill="#555">the app sends her</text>
-    <text x="283" y="213" text-anchor="middle" font-size="11.5" fill="#555">to the CSP</text>
+    <rect x="208" y="130" width="150" height="112" rx="9" fill="#fafafa" stroke="#c2c6ca" stroke-width="1.2"/>
+    <text x="283" y="164" text-anchor="middle" font-size="14" font-weight="600">Maria is known</text>
+    <text x="283" y="182" text-anchor="middle" font-size="14" font-weight="600">at IAL2</text>
+    <text x="283" y="210" text-anchor="middle" font-size="11.5" fill="#555">the app sends her</text>
+    <text x="283" y="225" text-anchor="middle" font-size="11.5" fill="#555">to the CSP</text>
   </g>
 
-  <text x="381" y="160" text-anchor="middle" font-size="10.5" fill="#777">id_token</text>
-  <line x1="358" y1="174" x2="402" y2="174" stroke="#555" stroke-width="1.2" marker-end="url(#la)"/>
+  <!-- entry fork -->
+  <text x="377" y="172" text-anchor="middle" font-size="10.5" fill="#777">id_token</text>
+  <line x1="358" y1="186" x2="394" y2="186" stroke="#555" stroke-width="1.2"/>
+  <circle cx="396" cy="186" r="2.6" fill="#555"/>
+  <line x1="396" y1="186" x2="421" y2="162" stroke="#555" stroke-width="1.2" marker-end="url(#lg)"/>
+  <line x1="396" y1="186" x2="421" y2="210" stroke="#555" stroke-width="1.2" marker-end="url(#lg)"/>
 
-  <!-- Maria-decides dotted box (lanes flow through it) -->
-  <text x="742" y="36" text-anchor="middle" font-size="12" font-style="italic" fill="#0f5132">Maria decides what to share, and from which sites</text>
-  <rect x="582" y="44" width="320" height="214" rx="11" fill="none" stroke="#9db8aa" stroke-width="1.2" stroke-dasharray="7 5"/>
+  <!-- Maria-decides dotted box, snapped to columns 1-2 -->
+  <text x="756" y="48" text-anchor="middle" font-size="12" font-style="italic" fill="#0f5132">Maria decides what to share, and from which sites</text>
+  <rect x="564" y="58" width="384" height="200" rx="11" fill="none" stroke="#9db8aa" stroke-width="1.2" stroke-dasharray="7 5"/>
 
-  <!-- column headers -->
+  <!-- column headers, one baseline band -->
   <g text-anchor="middle">
-    <text x="660" y="80" font-size="13" font-weight="600">Her grant</text>
-    <text x="660" y="96" font-size="13" font-weight="600">is captured</text>
-    <text x="822" y="80" font-size="13" font-weight="600">Her records</text>
-    <text x="822" y="96" font-size="13" font-weight="600">are located</text>
-    <text x="1018" y="72" font-size="13" font-weight="600">Each data holder</text>
-    <text x="1018" y="88" font-size="13" font-weight="600">issues its own token</text>
-    <text x="1018" y="103" font-size="10" fill="#555">checks the app, Maria, the grant</text>
+    <text x="660" y="86" font-size="13.5" font-weight="600">Her grant</text>
+    <text x="660" y="103" font-size="13.5" font-weight="600">is captured</text>
+    <text x="852" y="86" font-size="13.5" font-weight="600">Her records</text>
+    <text x="852" y="103" font-size="13.5" font-weight="600">are located</text>
+    <text x="1044" y="86" font-size="13.5" font-weight="600">Each data holder</text>
+    <text x="1044" y="103" font-size="13.5" font-weight="600">issues its own token</text>
+    <text x="1044" y="118" font-size="10.5" fill="#555">checks the app, Maria, the grant</text>
   </g>
 
   <!-- blue lane -->
   <g>
-    <rect x="408" y="116" width="742" height="46" rx="23" fill="#e1eef9" stroke="#0072b2" stroke-width="1.4"/>
-    <text x="494" y="135" text-anchor="middle" font-size="11" font-weight="700" fill="#0b4a75">network-based</text>
-    <text x="494" y="151" text-anchor="middle" font-size="11" font-weight="700" fill="#0b4a75">permission tickets</text>
-    <line x1="578" y1="124" x2="578" y2="154" stroke="#0072b2" stroke-width="0.7" opacity="0.4"/>
-    <text x="660" y="143" text-anchor="middle" font-size="10" fill="#0b4a75">a shared service records it</text>
-    <text x="822" y="143" text-anchor="middle" font-size="10" fill="#0b4a75">the service sees the full list</text>
-    <text x="1018" y="143" text-anchor="middle" font-size="10" fill="#0b4a75">presents a per-site ticket</text>
-    <line x1="1150" y1="139" x2="1166" y2="139" stroke="#0072b2" stroke-width="1.4" marker-end="url(#lb)"/>
+    <rect x="428" y="128" width="712" height="48" rx="24" fill="#eaf3fb" stroke="#0072b2" stroke-width="1.4"/>
+    <rect x="436" y="135" width="122" height="34" rx="17" fill="#0072b2"/>
+    <text x="497" y="149" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">network-based</text>
+    <text x="497" y="163" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">permission tickets</text>
+    <line x1="756" y1="137" x2="756" y2="167" stroke="#0072b2" stroke-width="1" opacity="0.25"/>
+    <line x1="948" y1="137" x2="948" y2="167" stroke="#0072b2" stroke-width="1" opacity="0.25"/>
+    <text x="660" y="156" text-anchor="middle" font-size="11" fill="#0b4a75">a shared service records it</text>
+    <text x="852" y="156" text-anchor="middle" font-size="11" fill="#0b4a75">the service sees the full list</text>
+    <text x="1044" y="156" text-anchor="middle" font-size="11" fill="#0b4a75">presents a per-site ticket</text>
   </g>
 
   <!-- orange lane -->
   <g>
-    <rect x="408" y="186" width="742" height="46" rx="23" fill="#fbf0da" stroke="#cc8400" stroke-width="1.4"/>
-    <text x="494" y="205" text-anchor="middle" font-size="11" font-weight="700" fill="#7a5200">app-based</text>
-    <text x="494" y="221" text-anchor="middle" font-size="11" font-weight="700" fill="#7a5200">client assertions</text>
-    <line x1="578" y1="194" x2="578" y2="224" stroke="#cc8400" stroke-width="0.7" opacity="0.4"/>
-    <text x="660" y="213" text-anchor="middle" font-size="10" fill="#7a5200">the app asserts the grant</text>
-    <text x="822" y="213" text-anchor="middle" font-size="10" fill="#7a5200">the app sees the full list</text>
-    <text x="1018" y="213" text-anchor="middle" font-size="10" fill="#7a5200">presents a cms_smart assertion</text>
-    <line x1="1150" y1="209" x2="1166" y2="209" stroke="#cc8400" stroke-width="1.4" marker-end="url(#lo)"/>
+    <rect x="428" y="196" width="712" height="48" rx="24" fill="#fdf5e3" stroke="#cc8400" stroke-width="1.4"/>
+    <rect x="436" y="203" width="122" height="34" rx="17" fill="#b97800"/>
+    <text x="497" y="217" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">app-based</text>
+    <text x="497" y="231" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">client assertions</text>
+    <line x1="756" y1="205" x2="756" y2="235" stroke="#cc8400" stroke-width="1" opacity="0.25"/>
+    <line x1="948" y1="205" x2="948" y2="235" stroke="#cc8400" stroke-width="1" opacity="0.25"/>
+    <text x="660" y="224" text-anchor="middle" font-size="11" fill="#7a5200">the app asserts the grant</text>
+    <text x="852" y="224" text-anchor="middle" font-size="11" fill="#7a5200">the app sees the full list</text>
+    <text x="1044" y="224" text-anchor="middle" font-size="11" fill="#7a5200">presents a cms_smart assertion</text>
   </g>
 
-  <!-- outlet -->
-  <text x="1200" y="168" text-anchor="middle" font-size="10.5" fill="#777">FHIR</text>
-  <text x="1200" y="182" text-anchor="middle" font-size="10.5" fill="#777">data</text>
-  <text x="1200" y="196" text-anchor="middle" font-size="10.5" fill="#777">flows</text>
+  <!-- converging exit -->
+  <line x1="1140" y1="152" x2="1166" y2="184" stroke="#555" stroke-width="1.2"/>
+  <line x1="1140" y1="220" x2="1166" y2="188" stroke="#555" stroke-width="1.2"/>
+  <circle cx="1168" cy="186" r="2.6" fill="#555"/>
+  <line x1="1170" y1="186" x2="1198" y2="186" stroke="#555" stroke-width="1.2" marker-end="url(#la)"/>
+  <text x="1206" y="190" font-size="11" fill="#555">FHIR data flows</text>
 </svg>

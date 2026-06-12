@@ -25,7 +25,7 @@ Before a data holder releases anything, it has to know the app, know Maria at IA
 
 ![The app is known, Maria is known at IAL2, her grant is captured, her records are located, and each data holder issues its own token, with a blue permission-ticket lane and an orange client-assertion lane through the fork](authorizing-access-logical.svg)
 
-The first tile happens once per network, before any patient is involved; the next section covers it. Everything after it follows Maria's flow.
+The app becomes known once per network, before any patient is involved; the next section covers how. Everything after that happens per patient.
 
 ---
 
