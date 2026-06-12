@@ -127,20 +127,29 @@ sequenceDiagram
 
     App->>CSP: sends Maria to sign in<br/>(the app is the CSP's relying party)
     CSP-->>App: IAL2 id_token
-    App->>SAS: opens the authorization step<br/>(code flow with PKCE, carrying the id_token as a hint)
-    SAS->>CSP: silent re-authentication via id_token_hint<br/>(no screen if Maria's CSP session is live)
-    CSP-->>SAS: fresh id_token, audienced to the service
-    SAS->>SAS: record location lookup: its own network,<br/>plus peer networks it has agreements with
-    SAS->>Maria: shows the matches<br/>Maria narrows sites and data categories
-    SAS-->>App: token response: per-site permission tickets<br/>+ endpoint hints
+    rect rgba(0, 114, 178, 0.06)
+        Note over App,SAS: ① the grant is established at the service
+        App->>SAS: opens the authorization step<br/>(code flow with PKCE, carrying the id_token as a hint)
+        SAS->>CSP: silent re-authentication via id_token_hint<br/>(no screen if Maria's CSP session is live)
+        CSP-->>SAS: fresh id_token, audienced to the service
+        SAS->>SAS: record location lookup: its own network,<br/>plus peer networks it has agreements with
+        rect rgba(0, 114, 178, 0.10)
+            Note over Maria,SAS: ② Maria narrows sites before the app learns anything
+            SAS->>Maria: shows the matches<br/>Maria narrows sites and data categories
+        end
+        SAS-->>App: token response: per-site permission tickets<br/>+ endpoint hints
+    end
     loop for each site Maria chose
-        App->>DH: redeems that site's ticket<br/>(app key + ticket, RFC 8693)
-        DH-->>App: access token + matched patient id
+        rect rgba(0, 114, 178, 0.06)
+            Note over App,DH: ③ the app presents that site's ticket
+            App->>DH: redeems that site's ticket<br/>(app key + ticket, RFC 8693)
+            DH-->>App: access token + matched patient id
+        end
         App->>DH: FHIR queries
     end
 ```
 
-Walking it through:
+The shaded bands are the three choice points from the figure above; the sections below show each one's alternative. Walking it through:
 
 1. BP Buddy signs Maria in at her IAL2 CSP itself: the app is the CSP's relying party and bears the proofing relationship. (The proofing cost was paid once; later sign-ins against that identity are cheap federated authentications.) [Example](example-artifacts/csp-sign-in.md).
 2. The app opens the authorization step at the shared authorization service (a standard SMART App Launch code flow with PKCE), already holding Maria's id_token, which it passes as a hint. The request also carries the app's Library-backed identity, so the service knows exactly which app is asking without any prior relationship. [Example](example-artifacts/authorization-step.md).
