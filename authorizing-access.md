@@ -2,7 +2,7 @@
 
 *This page shows how a patient-facing app, listed in the Medicare App Library, uses a CMS-Aligned Network to find where a patient's records are and to fetch them. Every flow on it ends the same way: each data holder, knowing the app and its key, knowing the patient at IAL2, and knowing what she authorized, issues its own access token with the matched patient id. What varies is how those facts reach the data holder.*
 
-The page shows one full flow, then three places where a deployment can do things differently. No version requires a home network, and every version keeps token issuance at the data holder.
+The page shows one full flow, then three places where a deployment can do things differently. No version requires a [home network](apps-without-home-networks.md), and every version keeps token issuance at the data holder.
 
 ---
 
@@ -31,7 +31,7 @@ The app joins once per network, before any patient is involved; the next section
 
 ## How the app joins the ecosystem
 
-CMS publishes a signed software statement for every active Library app: a short-lived JWT naming the app, its URIs, and its `jwks_uri`, and asserting its Library status ([example](example-artifacts/phase0-software-statement.md)). The statement pins the app's display name under the CMS signature, and it binds the app's keys by URL rather than by value, so the app rotates keys at its own `jwks_uri` without anyone re-issuing anything.
+CMS publishes a signed software statement for every active Library app: a short-lived JWT naming the app, its URIs, and its `jwks_uri`, and asserting its Library status ([example](example-artifacts/software-statement.md)). The statement pins the app's display name under the CMS signature, and it binds the app's keys by URL rather than by value, so the app rotates keys at its own `jwks_uri` without anyone re-issuing anything.
 
 Nothing on this page puts an intermediary between the app and the parties it talks to. If a deployment ever does, every receiver must learn both identities, the intermediary's and the app's, because the app is what patients recognize and what audit logs name.
 
@@ -62,7 +62,7 @@ sequenceDiagram
     NAS-->>Dev: client_id (recognized at all participating data holders)
 ```
 
-*Example artifacts: [registration through a developer portal](example-artifacts/phase2a-alpha-portal.md).*
+*Example artifacts: [registration through a developer portal](example-artifacts/portal-registration.md).*
 
 ### At each data holder, presenting the CMS software statement
 
@@ -91,7 +91,7 @@ sequenceDiagram
     end
 ```
 
-*Example artifacts: [dynamic registration with the CMS statement](example-artifacts/phase2b-beta-dynreg.md) and [the software statement itself](example-artifacts/phase0-software-statement.md).*
+*Example artifacts: [dynamic registration with the CMS statement](example-artifacts/dynamic-registration.md) and [the software statement itself](example-artifacts/software-statement.md).*
 
 ### At each data holder, presenting a community-issued certificate
 
@@ -113,7 +113,7 @@ sequenceDiagram
     end
 ```
 
-*Example artifacts: [registration with a community-issued certificate](example-artifacts/phase2c-gamma-udap.md).*
+*Example artifacts: [registration with a community-issued certificate](example-artifacts/certificate-registration.md).*
 
 ---
 
@@ -188,9 +188,9 @@ sequenceDiagram
     RLS-->>App: locations holding Maria's records
 ```
 
-*Example artifacts: [the client_credentials token and $rls call](example-artifacts/phase3-rls.md).*
+*Example artifacts: [the client_credentials token and $rls call](example-artifacts/client-credentials-rls.md).*
 
-`cms_smart` is the extension CMS documents for [Blue Button's CMS Aligned Networks flow](https://bluebutton.cms.gov/cms-aligned-networks-documentation/): a `client_credentials` grant whose signed `client_assertion` carries a `purpose_of_use` (`PATRQT` for patient access) and the patient's IAL2 id_token. `$rls` stands in for a record location operation whose wire shape is still an open question. Here "what Maria authorized" rests on the app's own assertion, backed by Library vetting, and Maria never leaves the app. This is the shape worked through end to end in the [connectivity walkthrough](app-connectivity-flows.md), and it is the floor the ecosystem already documents. Choosing it constrains the other two choice points: with no authorization step there is no service-side screen, so narrowing moves into the app, and there are no tickets, so the token request becomes `cms_smart`.
+`cms_smart` is the extension CMS documents for [Blue Button's CMS Aligned Networks flow](https://bluebutton.cms.gov/cms-aligned-networks-documentation/): a `client_credentials` grant whose signed `client_assertion` carries a `purpose_of_use` (`PATRQT` for patient access) and the patient's IAL2 id_token. `$rls` stands in for a record location operation whose wire shape is still an open question. Here "what Maria authorized" rests on the app's own assertion, backed by Library vetting, and Maria never leaves the app. It is the floor the ecosystem already documents. Choosing it constrains the other two choice points: with no authorization step there is no service-side screen, so narrowing moves into the app, and there are no tickets, so the token request becomes `cms_smart`.
 
 ## Choice point: where Maria narrows sites
 
@@ -226,7 +226,7 @@ sequenceDiagram
     DH-->>App: access_token bound to Maria, matched patient id
 ```
 
-*Example artifacts: [the cms_smart token request at a data holder](example-artifacts/phase4b-federated.md).*
+*Example artifacts: [the cms_smart token request at a data holder](example-artifacts/cms-smart-data-holder.md).*
 
 The data holder's verification work is nearly identical either way: client key against the Library-verified `jwks_uri`, identity evidence, its own patient match. What shifts is the attestation of scope: a ticket carries what an independent party recorded Maria authorizing; the `cms_smart` call carries what the app asserts she authorized. Notably, a deployment can adopt the authorization step while its data holders keep accepting `cms_smart` unchanged; the service's record of the grant exists even where it is not yet presented, which makes this the natural migration column in the table below.
 
@@ -258,7 +258,7 @@ One dependency: if the grant is app-asserted, then site narrowing happens in the
 
 ## Keys over time
 
-The app's keys live at its `jwks_uri` and rotate there on the app's own schedule. The CMS statement binds the URL, not a key, so rotation needs no re-issuance anywhere ([example](example-artifacts/phase5-key-rotation.md)). Any credential a network or a trust community issues to the app has to track the `jwks_uri` automatically; if re-syncing means emailing someone, rotation has turned into a manual per-network step.
+The app's keys live at its `jwks_uri` and rotate there on the app's own schedule. The CMS statement binds the URL, not a key, so rotation needs no re-issuance anywhere ([example](example-artifacts/key-rotation.md)). Any credential a network or a trust community issues to the app has to track the `jwks_uri` automatically; if re-syncing means emailing someone, rotation has turned into a manual per-network step.
 
 ---
 

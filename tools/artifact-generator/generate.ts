@@ -1,4 +1,4 @@
-// Generates the example-artifacts library for app-connectivity-flows.md.
+// Generates the example-artifacts library for authorizing-access.md.
 // Every JWT is really signed with keys generated at run time; decoded
 // header/payload are rendered next to each compact JWS. Run with:
 //   bun run generate.ts
@@ -105,14 +105,13 @@ function httpMd(title: string, lines: string[], body?: unknown, bodyLang = "json
   return out.join("\n");
 }
 
-const FLOWS_ONLY = new Set(["phase1-npd-discovery", "phase4a-alpha-facilitated"]);
 const pages: { file: string; title: string }[] = [];
 function writePage(file: string, title: string, intro: string, sections: string[]) {
   pages.push({ file, title });
   const md = [
     `# ${title}`,
     "",
-    `*Worked example for ${FLOWS_ONLY.has(file) ? "[the registration and connectivity walkthrough](../app-connectivity-flows.md)" : "[the record location and data access write-up](../authorizing-access.md)"}. ${intro}*`,
+    `*Worked example for [the record location and data access write-up](../authorizing-access.md). ${intro}*`,
     "",
     sections.join("\n\n---\n\n"),
     "",
@@ -153,7 +152,6 @@ function htmlWrapper(title: string, source: string): string {
   <nav class="site-nav">
     <a href="../index.html">CAN Spec</a> ·
     <a href="../apps-without-home-networks.html">Apps Without Home Networks</a> ·
-    <a href="../app-connectivity-flows.html">Connectivity Flows</a> ·
     <a href="../authorizing-access.html">Record Location &amp; Data Access</a> ·
     <a href="index.html">Artifacts</a>
   </nav>
@@ -163,7 +161,7 @@ function htmlWrapper(title: string, source: string): string {
 <script>
 const renderer = {
   link(href, title, text) {
-    if (!/^https?:/.test(href)) href = href.replace(/\\.md(#|$)/, '.html$1').replace('app-connectivity-flows.html', 'app-connectivity-flows.html');
+    if (!/^https?:/.test(href)) href = href.replace(/\\.md(#|$)/, '.html$1');
     return '<a href="' + href + '">' + text + '</a>';
   }
 };
@@ -203,7 +201,7 @@ const softwareStatement = await new SignJWT({
   .sign(cmsKey.privateKey);
 
 writePage(
-  "phase0-software-statement",
+  "software-statement",
   "The CMS-signed software statement",
   "CMS re-signs this statement on a short cycle for as long as BP Buddy is active in the Medicare App Library. It is the only credential the app carries into every network.",
   [
@@ -226,47 +224,6 @@ writePage(
   ],
 );
 
-// =====================================================================
-// Phase 1 — NPD discovery
-// =====================================================================
-writePage(
-  "phase1-npd-discovery",
-  "Phase 1 — NPD discovery",
-  "Plain JSON, no signatures: the app (or its client library) learns how each network handles registration.",
-  [
-    httpMd("Request", [`GET ${NPD}/networks?status=cms-aligned HTTP/1.1`, "Accept: application/json"]),
-    httpMd(
-      "Response — 200 OK",
-      ["HTTP/1.1 200 OK", "Content-Type: application/json"],
-      {
-        networks: [
-          {
-            name: "Alpha Health Network",
-            registration: { style: "centralized-portal", portal: ALPHA_PORTAL },
-            token_endpoint: ALPHA_TOKEN,
-            rls_endpoint: "https://rls.alpha-health.example/fhir",
-            retrieval: "facilitated-fhir",
-            data_holder_endpoints: `${NPD}/endpoints?network=alpha`,
-          },
-          {
-            name: "Beta Exchange",
-            registration: { style: "dynamic-registration", software_statement_issuers: [CMS_LIBRARY] },
-            rls_endpoint: BETA_RLS,
-            retrieval: "federated-fhir",
-            data_holder_endpoints: `${NPD}/endpoints?network=beta`,
-          },
-          {
-            name: "Gamma Trust Network",
-            registration: { style: "udap-dynamic-registration", community_ca: "https://ca.gamma-trust.example/anchor.pem" },
-            rls_endpoint: "https://rls.gamma-trust.example/fhir",
-            retrieval: "federated-fhir",
-            data_holder_endpoints: `${NPD}/endpoints?network=gamma`,
-          },
-        ],
-      },
-    ),
-  ],
-);
 
 // =====================================================================
 // Phase 2a — Alpha portal
@@ -282,7 +239,7 @@ const keyPossession = await new SignJWT({})
   .sign(appKeyA.privateKey);
 
 writePage(
-  "phase2a-alpha-portal",
+  "portal-registration",
   "Registration through a developer portal",
   "Most of this flow is a human in a browser, so the artifacts are the two machine-verifiable pieces: the statement link the developer pastes, and a key-possession proof the portal can ask for.",
   [
@@ -293,7 +250,7 @@ writePage(
       STATEMENT_URL,
       "```",
       "",
-      "The portal fetches it, verifies the CMS signature against CMS's published JWKS, checks `library_status: active`, and pre-fills app name, URIs, and contacts from the payload (see [phase0-software-statement](phase0-software-statement.md)).",
+      "The portal fetches it, verifies the CMS signature against CMS's published JWKS, checks `library_status: active`, and pre-fills app name, URIs, and contacts from the payload (see [software-statement](software-statement.md)).",
     ].join("\n"),
     [
       "One way Alpha can verify key possession during signup is a short-lived JWT the developer's tooling produces, verifiable against the app's CMS-verified `jwks_uri`:",
@@ -317,7 +274,7 @@ writePage(
 // Phase 2b — Beta dynamic registration
 // =====================================================================
 writePage(
-  "phase2b-beta-dynreg",
+  "dynamic-registration",
   "Dynamic registration with the CMS statement",
   "The same RFC 7591 call repeats at each Beta data holder; one representative exchange is shown, at Lakeside Clinic.",
   [
@@ -330,7 +287,7 @@ writePage(
         `Authorization: Bearer ${keyPossession.slice(0, 40)}... (key-possession JWT, same shape as in 2a)`,
       ],
       {
-        software_statement: `${softwareStatement.slice(0, 60)}... (full value in phase0-software-statement)`,
+        software_statement: `${softwareStatement.slice(0, 60)}... (full value in software-statement)`,
         grant_types: ["client_credentials"],
         token_endpoint_auth_method: "private_key_jwt",
       },
@@ -373,7 +330,7 @@ const udapStatement = await new SignJWT({
   .sign(udapKey.privateKey);
 
 writePage(
-  "phase2c-gamma-udap",
+  "certificate-registration",
   "Registration with a community-issued certificate",
   "The software statement here is self-signed with the key inside an X.509 certificate that Gamma's community CA issued to the app; trust comes from the chain to the CA anchor published in NPD. The certificate is real and chains to the CA in keys-and-trust-anchors.",
   [
@@ -440,7 +397,7 @@ const rlsAssertion = await clientAssertion("beta-rls-bp-buddy-5d20", BETA_RLS_TO
 const rlsAccessToken = opaque();
 
 writePage(
-  "phase3-rls",
+  "client-credentials-rls",
   "client_credentials + $rls: the app-asserted grant at a network",
   "Maria authenticated at her IAL2 CSP moments ago; her id_token travels inside the cms_smart extension of the client_assertion, following the Blue Button CMS Aligned Networks pattern. The access token comes back bound to her, so $rls can only locate her records.",
   [
@@ -503,67 +460,6 @@ writePage(
   ],
 );
 
-// =====================================================================
-// Phase 4a — Alpha: network-wide client_id, token issued by the data holder
-// =====================================================================
-const GENERAL_TOKEN = "https://generalhospital.example/oauth/token";
-const alphaAssertion = await clientAssertion("alpha-net-bp-buddy-7c31", GENERAL_TOKEN);
-const alphaAccessToken = opaque();
-
-writePage(
-  "phase4a-alpha-facilitated",
-  "Phase 4a — Alpha-wide client_id at General Hospital's token endpoint",
-  "Alpha distributed one client_id at portal registration but does not issue access tokens; each data holder's own authorization server does, after validating the identity evidence itself. The same exchange repeats at every Alpha data holder holding records.",
-  [
-    httpMd(
-      "Token request — to the data holder, using the network-distributed client_id",
-      [`POST ${GENERAL_TOKEN} HTTP/1.1`, "Host: generalhospital.example", "Content-Type: application/x-www-form-urlencoded"],
-      {
-        grant_type: "client_credentials",
-        scope: "patient/Observation.rs launch/patient",
-        client_assertion_type: "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
-        client_assertion: `${alphaAssertion.slice(0, 60)}... (decoded below)`,
-      },
-    ),
-    jwtMd("client_assertion — iss/sub are the Alpha-wide client_id; the cms_smart extension carries Maria's IAL2 id_token to the data holder", alphaAssertion),
-    httpMd("Token response — issued by General Hospital, with its locally matched patient id", ["HTTP/1.1 200 OK", "Content-Type: application/json"], {
-      access_token: alphaAccessToken,
-      token_type: "Bearer",
-      expires_in: 1800,
-      scope: "patient/Observation.rs launch/patient",
-      patient: "gh-local-228847",
-    }),
-    httpMd(
-      "FHIR query — using the matched id",
-      [
-        "GET https://fhir.generalhospital.example/r4/Observation?patient=gh-local-228847&category=vital-signs&_count=1 HTTP/1.1",
-        `Authorization: Bearer ${alphaAccessToken}`,
-        "Accept: application/fhir+json",
-      ],
-    ),
-    httpMd("FHIR response", ["HTTP/1.1 200 OK", "Content-Type: application/fhir+json"], {
-      resourceType: "Bundle",
-      type: "searchset",
-      total: 1,
-      entry: [
-        {
-          resource: {
-            resourceType: "Observation",
-            status: "final",
-            category: [{ coding: [{ system: "http://terminology.hl7.org/CodeSystem/observation-category", code: "vital-signs" }] }],
-            code: { coding: [{ system: "http://loinc.org", code: "85354-9", display: "Blood pressure panel" }] },
-            subject: { reference: "Patient/gh-local-228847" },
-            effectiveDateTime: "2026-05-28T09:30:00Z",
-            component: [
-              { code: { coding: [{ system: "http://loinc.org", code: "8480-6" }] }, valueQuantity: { value: 128, unit: "mmHg" } },
-              { code: { coding: [{ system: "http://loinc.org", code: "8462-4" }] }, valueQuantity: { value: 79, unit: "mmHg" } },
-            ],
-          },
-        },
-      ],
-    }),
-  ],
-);
 
 // =====================================================================
 // Permission-ticket alternative (Phase 3 evolution)
@@ -723,7 +619,7 @@ const lakesideAssertion = await clientAssertion("lakeside-dh-bp-buddy-91af", LAK
 const lakesideAccessToken = opaque();
 
 writePage(
-  "phase4b-federated",
+  "cms-smart-data-holder",
   "cms_smart at a data holder: token and FHIR retrieval",
   "Same token shape as everywhere else; the only difference from 4a is that the data holder's own authorization server issues the token, and a refresh_token supports the rolling 90-day window of can-spec §9.",
   [
@@ -788,7 +684,7 @@ const rotatedAssertion = await new SignJWT({
   .sign(appKeyB.privateKey);
 
 writePage(
-  "phase5-key-rotation",
+  "key-rotation",
   "Key rotation",
   "The app publishes key B alongside key A, then signs with the new kid; data holders resolve it at the live jwks_uri with nothing to re-issue.",
   [
@@ -811,7 +707,7 @@ writePage(
       jwtMd("client_assertion signed with key B", rotatedAssertion),
     ].join("\n"),
     [
-      "After the overlap window the app removes key A from the JWKS. Nothing else in the ecosystem changed: the CMS statement binds the `jwks_uri`, not a key. For network-issued certificates, the synchronization rule in [Phase 5 of the walkthrough](../app-connectivity-flows.md) applies.",
+      "After the overlap window the app removes key A from the JWKS. Nothing else in the ecosystem changed: the CMS statement binds the `jwks_uri`, not a key. For network-issued certificates, the synchronization rule in [Keys over time](../authorizing-access.md) applies.",
     ].join("\n"),
   ],
 );
@@ -957,26 +853,20 @@ writePage(
 {
   const groups: Array<[string, string[]]> = [
     ["Record location and data access ([authorizing-access.md](../authorizing-access.md))", [
+      "software-statement",
+      "portal-registration",
+      "dynamic-registration",
+      "certificate-registration",
       "csp-sign-in",
       "authorization-step",
       "peer-record-location",
       "issuance-token-response",
       "permission-ticket",
       "blanket-ticket",
-      "phase3-rls",
-      "phase4b-federated",
-      "phase5-key-rotation",
-    ]],
-    ["Registration and connectivity walkthrough ([app-connectivity-flows.md](../app-connectivity-flows.md))", [
-      "phase0-software-statement",
-      "phase1-npd-discovery",
-      "phase2a-alpha-portal",
-      "phase2b-beta-dynreg",
-      "phase2c-gamma-udap",
-      "phase3-rls",
-      "phase4a-alpha-facilitated",
-      "phase4b-federated",
-      "phase5-key-rotation",
+      "client-credentials-rls",
+      "cms-smart-data-holder",
+      "key-rotation",
+      "keys-and-trust-anchors",
     ]],
   ];
   const byFile = new Map(pages.map((p) => [p.file, p.title]));

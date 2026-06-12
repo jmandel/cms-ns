@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Registration through a developer portal</title>
+<title>Key rotation</title>
 <style>
   :root { --fg:#1a1a1a; --bg:#fff; --bg-code:#f4f4f5; --accent:#0f5132; --accent-soft:#e7f1ec; --rule:#e5e5e5; }
   * { box-sizing:border-box; }
@@ -28,7 +28,6 @@
   <nav class="site-nav">
     <a href="../index.html">CAN Spec</a> ·
     <a href="../apps-without-home-networks.html">Apps Without Home Networks</a> ·
-    <a href="../app-connectivity-flows.html">Connectivity Flows</a> ·
     <a href="../authorizing-access.html">Record Location &amp; Data Access</a> ·
     <a href="index.html">Artifacts</a>
   </nav>
@@ -38,12 +37,12 @@
 <script>
 const renderer = {
   link(href, title, text) {
-    if (!/^https?:/.test(href)) href = href.replace(/\.md(#|$)/, '.html$1').replace('app-connectivity-flows.html', 'app-connectivity-flows.html');
+    if (!/^https?:/.test(href)) href = href.replace(/\.md(#|$)/, '.html$1');
     return '<a href="' + href + '">' + text + '</a>';
   }
 };
 marked.use({ renderer, mangle: false, headerIds: true });
-fetch('phase2a-alpha-portal.md').then(r => r.text()).then(md => {
+fetch('key-rotation.md').then(r => r.text()).then(md => {
   document.getElementById('content').innerHTML = marked.parse(md);
 });
 </script>
