@@ -1,8 +1,8 @@
 # How Patient Apps Use a CMS-Aligned Network for Record Location and Data Access
 
-*This page shows how a patient-facing app, listed in the Medicare App Library, uses a CMS-Aligned Network to find where a patient's records are and to fetch them. Every flow on it ends the same way: each data holder, knowing the app and its key, knowing the patient at IAL2, and knowing what she authorized, issues its own access token with the matched patient id. What varies is how those facts reach the data holder.*
+*This proposal shows how a patient-facing app, listed in the Medicare App Library, uses a CMS-Aligned Network to find where a patient's records are and to fetch them. Every flow in it ends the same way: each data holder, knowing the app and its key, knowing the patient at IAL2, and knowing what she authorized, issues its own access token with the matched patient id. What varies is how those facts reach the data holder.*
 
-The page shows one full flow, then three places where a deployment can do things differently. No version requires a [home network](apps-without-home-networks.md), and every version keeps token issuance at the data holder.
+The proposal shows one full flow, then three places where a deployment can do things differently. No version requires a [home network](apps-without-home-networks.md), and every version keeps token issuance at the data holder.
 
 ---
 
@@ -13,7 +13,7 @@ The page shows one full flow, then three places where a deployment can do things
 | **BP Buddy** | Patient-facing app, listed in the Medicare App Library and registered with the networks it uses (see How the app joins the ecosystem). |
 | **Maria** | A patient with records at several organizations, identity-proofed once at an IAL2 CSP. |
 | **IAL2 CSP** | CLEAR / ID.me. Proofed Maria once; later sign-ins against that identity are cheap federated authentications, not re-proofing. |
-| **CMS App Library** | Lists vetted patient-facing apps and publishes a signed software statement for each. The statement is the app's identity everywhere on this page. |
+| **CMS App Library** | Lists vetted patient-facing apps and publishes a signed software statement for each. The statement is the app's identity everywhere in this proposal. |
 | **The network** | A CMS-Aligned Network: its participating data holders plus a record location service. |
 | **Data holders** | Each runs its own authorization server and FHIR endpoint, and issues its own access tokens. |
 
@@ -33,7 +33,7 @@ The app joins once per network, before any patient is involved; the next section
 
 Getting into the Medicare App Library involves identity verification, conformance testing against an open reference kit, certification by a recognized body, and a check that the app controls its `jwks_uri`. From then on, CMS publishes a signed software statement for every active Library app: a short-lived JWT naming the app, its URIs, and its `jwks_uri`, and asserting its Library status ([example](example-artifacts/software-statement.md)). The statement pins the app's display name under the CMS signature, and it binds the app's keys by URL rather than by value, so the app rotates keys at its own `jwks_uri` without anyone re-issuing anything.
 
-This page never puts an intermediary between the app and the parties it talks to. If we did pursue designs where a [home network](apps-without-home-networks.md) acts as one, we would need to develop protocols that accurately convey details about both the home network and the app throughout every flow, because the app is what patients recognize and what audit logs name. We avoid this complexity by modeling apps as direct participants in the ecosystem.
+This proposal never puts an intermediary between the app and the parties it talks to. If we did pursue designs where a [home network](apps-without-home-networks.md) acts as one, we would need to develop protocols that accurately convey details about both the home network and the app throughout every flow, because the app is what patients recognize and what audit logs name. We avoid this complexity by modeling apps as direct participants in the ecosystem.
 
 Once an app is listed in the Library, it can register with CMS-aligned networks. The app finds each network, its registration method, and its endpoints in the National Provider Directory. To count as CMS-aligned, a network must meet two functional requirements; how it meets them is up to the network, and the examples below show the range of mechanisms that qualify.
 
