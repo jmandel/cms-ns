@@ -21,9 +21,9 @@ The page shows one full flow, then three places where a deployment can do things
 
 ## What has to happen
 
-Before a data holder releases anything, it has to know the app, know Maria at IAL2, and know what she authorized, and someone has to work out where her records are. Three of the tiles carry a pair of options: those are the places where there is more than one reasonable way to do this.
+Before a data holder releases anything, it has to know the app, know Maria at IAL2, and know what she authorized, and someone has to work out where her records are. Where the path forks, two lanes run through the same steps side by side: the blue lane rides network-based permission tickets, the orange lane rides app-based client assertions, and they can be mixed step by step (the table near the end shows the combinations).
 
-![The app is known, Maria is known at IAL2, her grant is captured, her records are located, and each data holder issues its own token, with choice points marked by paired options](authorizing-access-logical.svg)
+![The app is known, Maria is known at IAL2, her grant is captured, her records are located, and each data holder issues its own token, with a blue permission-ticket lane and an orange client-assertion lane through the fork](authorizing-access-logical.svg)
 
 The first tile happens once per network, before any patient is involved; the next section covers it. Everything after it follows Maria's flow.
 
@@ -84,7 +84,7 @@ sequenceDiagram
     CMS-->>App: software_statement
     loop for each data holder, automated
         App->>DH: POST /register (RFC 7591, software_statement)
-        Note over DH: verifies CMS signature, library_status,<br/>key possession, approval signal (if any)
+        DH->>DH: verifies CMS signature, library_status,<br/>key possession, approval signal (if any)
         DH-->>App: client_id at that data holder
     end
 ```
@@ -100,8 +100,7 @@ sequenceDiagram
     participant CA as Trust-community CA
     participant DH as Data holder<br/>auth servers
 
-    Note over App,CA: One-time per-network step (may be manual)
-    App->>CA: Certificate request (community vetting per<br/>network policy, leaning on the same<br/>CMS Library evidence)
+    App->>CA: Certificate request, once per network and possibly manual<br/>(community vetting per network policy, leaning<br/>on the same CMS Library evidence)
     CA-->>App: X.509 certificate
     loop for each data holder, automated
         App->>DH: UDAP dynamic registration<br/>(RFC 7591, software statement signed with X.509 key)
@@ -112,9 +111,9 @@ sequenceDiagram
 
 ---
 
-## The flow drawn above, step by step
+## The permission-ticket lane, step by step
 
-In this flow, a shared authorization service captures the grant: a party trusted by the network to do so, though not necessarily operated by it. It may be the network's own service, a portal vendor, or another party the network's data holders recognize, and it can run record location lookups against its own network and against peer networks it has agreements with. The app then redeems per-site tickets at the data holders:
+This expands the blue lane from the figure. A shared authorization service captures the grant: a party trusted by the network to do so, though not necessarily operated by it. It may be the network's own service, a portal vendor, or another party the network's data holders recognize, and it can run record location lookups against its own network and against peer networks it has agreements with. The app then redeems per-site tickets at the data holders:
 
 ```mermaid
 sequenceDiagram
@@ -128,20 +127,20 @@ sequenceDiagram
     App->>CSP: sends Maria to sign in<br/>(the app is the CSP's relying party)
     CSP-->>App: IAL2 id_token
     rect rgba(0, 114, 178, 0.06)
-        Note over App,SAS: choice point: the grant is captured at the service
+        Note over App,SAS: a shared service records it
         App->>SAS: opens the authorization step<br/>(code flow with PKCE, carrying the id_token as a hint)
         SAS->>CSP: silent re-authentication via id_token_hint<br/>(no screen if Maria's CSP session is live)
         CSP-->>SAS: fresh id_token, audienced to the service
         SAS->>SAS: record location lookup: its own network,<br/>plus peer networks it has agreements with
         rect rgba(0, 114, 178, 0.10)
-            Note over Maria,SAS: choice point: Maria narrows sites here, not in the app
+            Note over Maria,SAS: the service sees the full list
             SAS->>Maria: shows the matches<br/>Maria narrows sites and data categories
         end
         SAS-->>App: token response: per-site permission tickets<br/>+ endpoint hints
     end
     loop for each site Maria chose
         rect rgba(0, 114, 178, 0.06)
-            Note over App,DH: choice point: the app presents a ticket
+            Note over App,DH: presents a per-site ticket
             App->>DH: redeems that site's ticket<br/>(app key + ticket, RFC 8693)
             DH-->>App: access token + matched patient id
         end
@@ -149,7 +148,7 @@ sequenceDiagram
     end
 ```
 
-The shaded bands are the three choice points from the figure above; the sections below show each one's alternative. Walking it through:
+The blue bands carry the same labels as the blue lane in the figure; each is a choice point, and the sections after this walkthrough show the orange alternative at each. Walking it through:
 
 1. BP Buddy signs Maria in at her IAL2 CSP itself: the app is the CSP's relying party and bears the proofing relationship. (The proofing cost was paid once; later sign-ins against that identity are cheap federated authentications.) [Example](example-artifacts/csp-sign-in.md).
 2. The app opens the authorization step at the shared authorization service (a standard SMART App Launch code flow with PKCE), already holding Maria's id_token, which it passes as a hint. The request also carries the app's Library-backed identity, so the service knows exactly which app is asking without any prior relationship. [Example](example-artifacts/authorization-step.md).
@@ -166,7 +165,7 @@ There is no `$rls` call by the app anywhere in this story: record location happe
 
 ## Choice point: who captures the grant
 
-The flow above establishes the grant at the shared authorization service. The alternative is the flow CMS documents for Blue Button, where the app attests the grant itself:
+The ticket lane establishes the grant at the shared authorization service. The alternative is the flow CMS documents for Blue Button, where the app attests the grant itself:
 
 ```mermaid
 sequenceDiagram
@@ -185,7 +184,7 @@ sequenceDiagram
 
 ## Choice point: where Maria narrows sites
 
-In the flow above, Maria narrows sites on the service's screen, before the app learns anything. The alternative sends the app everything ([example](example-artifacts/blanket-ticket.md)) and lets her narrow the list inside the app:
+In the ticket lane, Maria narrows sites on the service's screen, before the app learns anything. The alternative sends the app everything ([example](example-artifacts/blanket-ticket.md)) and lets her narrow the list inside the app:
 
 ```mermaid
 sequenceDiagram
@@ -203,7 +202,7 @@ Maria has the same control over what data flows either way. The difference is wh
 
 ## Choice point: what the app presents at each data holder
 
-In the flow above the app presents a ticket. The alternative uses the same `cms_smart` call described under the grant choice point ([example](example-artifacts/phase4b-federated.md)):
+In the ticket lane the app presents that site's ticket. The alternative uses the same `cms_smart` call described under the grant choice point ([example](example-artifacts/phase4b-federated.md)):
 
 ```mermaid
 sequenceDiagram
@@ -219,7 +218,7 @@ The data holder's verification work is nearly identical either way: client key a
 
 ## How Maria signs in (within the grant step)
 
-In the flow above, the app signed Maria in at the CSP and the service re-authenticates her silently with an `id_token_hint`, which yields a fresh, service-audienced assertion that the person in this browser is Maria. The lighter option skips the re-authentication: the service accepts the app-passed IAL2 id_token itself as the sign-in. That token is automatically verifiable and audience-bound to the app, and accepting it is the same trust model the `cms_smart` flow already runs on. It is an honest option provided it is named for what it is: it proves the app holds a recent assertion about Maria, not that Maria is present in this browser. A service accepting it should say so rather than implying a separation it does not deliver.
+In the ticket lane, the app signed Maria in at the CSP and the service re-authenticates her silently with an `id_token_hint`, which yields a fresh, service-audienced assertion that the person in this browser is Maria. The lighter option skips the re-authentication: the service accepts the app-passed IAL2 id_token itself as the sign-in. That token is automatically verifiable and audience-bound to the app, and accepting it is the same trust model the `cms_smart` flow already runs on. It is an honest option provided it is named for what it is: it proves the app holds a recent assertion about Maria, not that Maria is present in this browser. A service accepting it should say so rather than implying a separation it does not deliver.
 
 ---
 
