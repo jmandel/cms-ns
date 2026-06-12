@@ -269,7 +269,7 @@ sequenceDiagram
 
 *Example artifacts: [the cms_smart token request at a data holder](example-artifacts/cms-smart-data-holder.md).*
 
-The data holder's verification work is nearly identical to the blue path: client key against the Library-verified `jwks_uri`, identity evidence, its own patient match. What shifts is the attestation of scope: a ticket carries what an independent party recorded Maria authorizing; the `cms_smart` call carries what the app asserts she authorized. Notably, a deployment can adopt the authorization step while its data holders keep accepting `cms_smart` unchanged; the service's record of the grant exists even where it is not yet presented, which makes this a natural transition stage. Continued access also differs: here, data holders may issue refresh tokens under the can-spec's rolling 90-day window; on the ticket path, a still-valid ticket is simply presented again, and expired tickets are renewed at the service.
+The data holder's verification work is nearly identical to the blue path: client key against the Library-verified `jwks_uri`, identity evidence, its own patient match. What shifts is the attestation of scope: a ticket carries what an independent party recorded Maria authorizing; the `cms_smart` call carries what the app asserts she authorized. Notably, a deployment can adopt the authorization step while its data holders implement only the `cms_smart` call; the service's record of the grant exists even where it is not yet presented, which makes this a natural transition stage. Continued access also differs: here, data holders may issue refresh tokens under the can-spec's rolling 90-day window; on the ticket path, a still-valid ticket is simply presented again, and expired tickets are renewed at the service.
 
 ## Comparing the paths
 
@@ -282,7 +282,7 @@ Rows are criteria; the text in each cell describes what that path looks like fro
 <tr><th>What the app learns about Maria's care sites</th><td class="g">the sites she chose; others are never named to it</td><td class="r">every match, before she narrows</td></tr>
 <tr><th>Maria's steps at grant time</th><td class="y">one redirect; sign-in usually silent; one screen</td><td class="g">none beyond the CSP sign-in inside the app</td></tr>
 <tr><th>What each data holder verifies</th><td class="g">the ticket signature, the identity evidence inside it, and its own patient match</td><td class="y">the app's key, the id_token, and its own patient match</td></tr>
-<tr><th>Changes required at data holders</th><td class="r">accept RFC 8693 ticket redemption</td><td class="g">none; Blue Button documents this call</td></tr>
+<tr><th>Changes required at data holders</th><td class="r">accept RFC 8693 ticket redemption and verify tickets</td><td class="y">support the <code>cms_smart</code> extension on client_credentials grants; CMS documents it and Blue Button implements it, but no other production data holder offers it today</td></tr>
 <tr><th>New parties that must exist</th><td class="r">a shared authorization service the network trusts</td><td class="g">none</td></tr>
 <tr><th>How Maria revokes</th><td class="g">once, at the service; status reaches credentials derived from the ticket</td><td class="r">per app, and per data holder</td></tr>
 <tr><th>What the audit trail holds</th><td class="g">the ticket itself: which app, which grant, signed</td><td class="y">the data holder's log of the app's call and its asserted purpose</td></tr>
@@ -290,4 +290,4 @@ Rows are criteria; the text in each cell describes what that path looks like fro
 </tbody>
 </table>
 
-A transition mix is workable where the cells suggest it: a service-recorded grant presented to data holders as `cms_smart` scores like the assertions column at the data holder rows and like the tickets column everywhere else, which is what makes it a deployment stage rather than a destination.
+A transition mix is workable where the cells suggest it: a service-recorded grant presented to data holders as `cms_smart` asks data holders for only the smaller change, while everything else scores like the tickets column. That decoupling is what makes it a deployment stage rather than a destination.
