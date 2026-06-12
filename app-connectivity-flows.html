@@ -30,8 +30,9 @@
   th { background: var(--accent-soft); }
   hr { border: none; border-top: 1px solid var(--rule); margin: 2.5em 0; }
   .mermaid { background: #fff; border: 1px solid var(--rule); border-radius: 6px; padding: 12px; margin: 1.2em 0; text-align: center; }
+  #content img { max-width: 100%; }
   @media (min-width: 1160px) {
-    .mermaid { width: 1080px; margin-left: calc(50% - 540px); }
+    .mermaid, #content img { width: 1080px; max-width: none; margin-left: calc(50% - 540px); }
   }
   .site-nav { font-size: 0.95em; background: var(--accent-soft); border: 1px solid var(--rule); border-radius: 6px; padding: 10px 16px; margin-bottom: 28px; }
   .site-nav a { font-weight: 600; }
