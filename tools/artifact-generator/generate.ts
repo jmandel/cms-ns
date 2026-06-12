@@ -658,7 +658,7 @@ writePage(
       { grant_type: "refresh_token", refresh_token: "(value from the response above)", client_id: "sas-bp-buddy-3f81" },
     ),
     "The refresh response has the same shape as the original: a fresh smart_permission_ticket array for the same site selection, with new expirations.",
-    "If Maria instead chooses every site in the network (the alternative at choice point ②), the response carries one blanket ticket with no data_holder_filter and endpoint hints for every match: see [blanket-ticket](blanket-ticket.md). Redeeming a per-site ticket at a data holder is shown in [permission-ticket](permission-ticket.md).",
+    "If Maria instead chooses every site in the network (the alternative where the app sees every match), the response carries one blanket ticket with no data_holder_filter and endpoint hints for every match: see [blanket-ticket](blanket-ticket.md). Redeeming a per-site ticket at a data holder is shown in [permission-ticket](permission-ticket.md).",
   ],
 );
 
